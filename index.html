@@ -1,0 +1,3588 @@
+<!DOCTYPE html>
+<!-- 
+    Chaudhary Kirana Store - Main Store
+    
+    IMPORTANT SETUP NOTES:
+    1. This file requires a local server to run properly (not file:// protocol)
+    2. Use VS Code Live Server extension or similar local server
+    3. Firebase Cloud Messaging requires HTTPS or localhost
+    4. The firebase-messaging-sw.js file must be in the same directory
+    
+    To run this store:
+    1. Install VS Code Live Server extension
+    2. Right-click on this file → "Open with Live Server"
+    3. Or use any local server that serves files from this directory
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chaudhary Kirana Store - Online Store</title>
+    <!-- Google Fonts: Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            /* Light Mode Colors */
+            --primary-red: #e74a3b;
+            --text-color: #333;
+            --muted-color: #777;
+            --surface-color: #fff;
+            --surface-dark-color: #f8f9fa;
+            --border-color: #eee;
+            --shadow-color: rgba(0, 0, 0, 0.08);
+            --card-border-radius: 18px; /* Between 16-20px */
+
+            /* Category chip colors - placeholders, will be dynamic */
+            --category-fashion: #ffadad;
+            --category-electronics: #ffd6a5;
+            --category-home: #fdffb6;
+            --category-books: #caffbf;
+            --category-food: #9bf6ff;
+            --category-all: #a0c4ff;
+        }
+
+        /* Dark Mode Colors */
+        [data-theme="dark"] {
+            --primary-red: #ff6b6b;
+            --text-color: #ffffff;
+            --muted-color: #b0b0b0;
+            --surface-color: #2d2d2d;
+            --surface-dark-color: #1a1a1a;
+            --border-color: #444;
+            --shadow-color: rgba(0, 0, 0, 0.3);
+        }
+
+        /* Smooth theme transitions */
+        * {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* Dark mode specific improvements */
+        [data-theme="dark"] .card {
+            background-color: var(--surface-color);
+            border-color: var(--border-color);
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+
+        [data-theme="dark"] .header {
+            background-color: var(--surface-color);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        [data-theme="dark"] .bottom-nav {
+            background-color: var(--surface-color);
+            border-top: 1px solid var(--border-color);
+        }
+
+        [data-theme="dark"] .bottom-nav-item {
+            color: var(--muted-color);
+        }
+
+        [data-theme="dark"] .bottom-nav-item.active {
+            color: var(--primary-red);
+        }
+
+        [data-theme="dark"] input,
+        [data-theme="dark"] textarea,
+        [data-theme="dark"] select {
+            background-color: var(--surface-dark-color);
+            border-color: var(--border-color);
+            color: var(--text-color);
+        }
+
+        [data-theme="dark"] input:focus,
+        [data-theme="dark"] textarea:focus,
+        [data-theme="dark"] select:focus {
+            background-color: var(--surface-color);
+            border-color: var(--primary-red);
+        }
+
+        /* Dark mode profile dropdown improvements */
+        [data-theme="dark"] .profile-dropdown {
+            background: rgba(45, 45, 45, 0.98);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 
+                        0 4px 16px rgba(0, 0, 0, 0.4);
+        }
+
+        [data-theme="dark"] .profile-info {
+            background: rgba(255, 255, 255, 0.08);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        [data-theme="dark"] .profile-action-btn {
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        [data-theme="dark"] .profile-action-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: var(--primary-red);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+        }
+
+        [data-theme="dark"] .profile-action-btn i {
+            color: #ffffff !important;
+        }
+
+        [data-theme="dark"] #header-logout-btn {
+            background: rgba(231, 74, 59, 0.15);
+            border: 1px solid rgba(231, 74, 59, 0.4);
+            color: #ff6b6b !important;
+        }
+
+        [data-theme="dark"] #header-logout-btn:hover {
+            background: rgba(231, 74, 59, 0.25);
+            border-color: var(--primary-red);
+        }
+
+        [data-theme="dark"] #header-logout-btn i {
+            color: #ff6b6b !important;
+        }
+
+        /* Theme Toggle Button */
+        .theme-toggle {
+            background: none;
+            border: 2px solid var(--primary-red);
+            color: var(--primary-red);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.2rem;
+            margin-left: 15px;
+        }
+
+        .theme-toggle:hover {
+            background: var(--primary-red);
+            color: var(--surface-color);
+            transform: scale(1.1);
+        }
+
+        .theme-toggle:active {
+            transform: scale(0.95);
+        }
+
+        /* Mobile responsive theme toggle */
+        @media (max-width: 768px) {
+            .theme-toggle {
+                width: 36px;
+                height: 36px;
+                font-size: 1rem;
+                margin-left: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .theme-toggle {
+                width: 32px;
+                height: 32px;
+                font-size: 0.9rem;
+                margin-left: 8px;
+            }
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            background-color: var(--surface-dark-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            padding-bottom: 60px; /* Space for fixed bottom nav */
+        }
+
+        *, *::before, *::after {
+            box-sizing: inherit;
+        }
+
+        a {
+            text-decoration: none;
+            color: var(--primary-red);
+        }
+
+        button {
+            cursor: pointer;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 15px;
+        }
+
+        /* Fixed Top Header */
+        .header {
+            background-color: var(--surface-color);
+            padding: 15px;
+            box-shadow: 0 2px 10px var(--shadow-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+
+        .header .logo {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--primary-red);
+            display: flex;
+            align-items: center;
+            justify-content: center; /* Center logo horizontally */
+            height: 40px; /* Ensure consistent height for alignment */
+            cursor: pointer;
+            transition: color 0.3s ease, transform 0.2s ease;
+            font-family: 'Poppins', sans-serif;
+            letter-spacing: 0.5px;
+            text-transform: capitalize;
+            line-height: 1.2;
+            text-align: center;
+        }
+
+        .header .logo:hover {
+            color: #cf3d30; /* Darker red on hover */
+            transform: scale(1.05);
+        }
+
+        .header .logo img {
+            height: 30px; /* Adjust as needed */
+            margin-right: 8px;
+        }
+
+        .header .icons {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header .icon-btn {
+            background: none;
+            color: var(--text-color);
+            font-size: 1.2rem;
+            position: relative;
+        }
+
+        #login-status-indicator {
+            width: 10px;
+            height: 10px;
+            background-color: green; /* Green when logged in */
+            border-radius: 50%;
+            display: none; /* Hide by default, show when logged in */
+            position: absolute;
+            top: -2px;
+            right: -2px;
+        }
+
+        /* Responsive adjustments for smaller screens */
+        @media (max-width: 480px) {
+            .header {
+                padding: 10px;
+                height: 50px; /* Consistent header height on mobile */
+            }
+
+            .header .logo {
+                font-size: 1.1rem;
+                height: auto; /* Allow logo height to adjust within smaller header */
+                letter-spacing: 0.3px;
+                line-height: 1.1;
+            }
+
+            .header .logo img {
+                height: 25px;
+            }
+
+            .header .icons {
+                gap: 15px;
+            }
+
+            .header .icon-btn {
+                font-size: 1.1rem;
+            }
+
+            main {
+                padding-top: 45px; /* Reduced space for smaller header */
+            }
+
+            .container {
+                padding: 10px;
+            }
+
+            .card {
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+
+            /* Modals should scroll if content is too tall */
+            #auth-modal > div,
+            #product-detail-modal > div,
+            #shipping-modal > div {
+                max-height: 90vh;
+                overflow-y: auto;
+                padding: 25px; /* Slightly more padding for modal content on small screens */
+            }
+
+            /* Adjust font sizes for better readability on small screens */
+            h2 {
+                font-size: 1.5rem;
+            }
+
+            h3 {
+                font-size: 1.2rem;
+            }
+
+            button {
+                padding: 8px 12px;
+                font-size: 0.9rem;
+            }
+
+            .bottom-nav {
+                padding: 8px 0;
+            }
+
+            .bottom-nav-item {
+                font-size: 0.7rem;
+            }
+
+            .bottom-nav-item i {
+                font-size: 1.1rem;
+            }
+
+            /* Cart and Wishlist item specific adjustments */
+            #cart-items .card,
+            #wishlist-items .card {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            #cart-items .card img,
+            #wishlist-items .card img {
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+
+            #cart-items .card > div:nth-child(2),
+            #wishlist-items .card > div:nth-child(2) {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+
+            #cart-items .card > div:nth-child(3),
+            #wishlist-items .card > div:nth-child(3) {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            #cart-items .card > div:nth-child(3) span {
+                flex-grow: 1;
+                text-align: center;
+            }
+
+            /* Order list table needs to be handled for small screens */
+            #order-list table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap; /* Prevent text wrapping */
+            }
+
+            #order-list thead {
+                display: none; /* Hide header on small screens */
+            }
+
+            #order-list tbody,
+            #order-list tr,
+            #order-list td {
+                display: block;
+            }
+
+            #order-list tr {
+                margin-bottom: 15px;
+                border: 1px solid var(--border-color);
+                border-radius: var(--card-border-radius);
+                padding: 10px;
+            }
+
+            #order-list td {
+                text-align: right; /* Align content to the right */
+                padding-left: 50%; /* Make space for labels */
+                position: relative;
+            }
+
+            #order-list td::before {
+                content: attr(data-label);
+                position: absolute;
+                left: 10px;
+                width: calc(50% - 20px);
+                text-align: left;
+                font-weight: 600;
+                color: var(--text-color);
+            }
+        }
+
+        /* Fixed Bottom Navigation */
+        .bottom-nav {
+            background-color: var(--surface-color);
+            padding: 10px 0;
+            box-shadow: 0 -2px 10px var(--shadow-color);
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--muted-color);
+            font-size: 0.85rem; /* Slightly larger font for readability */
+            padding: 8px 5px; /* Increased vertical padding */
+            flex: 1;
+            text-align: center;
+            transition: color 0.2s ease, transform 0.2s ease; /* Smooth transition for active/hover */
+        }
+
+        .bottom-nav-item i {
+            font-size: 1.4rem; /* Slightly larger icon */
+            margin-bottom: 4px; /* Slightly more space below icon */
+        }
+
+        .bottom-nav-item.active {
+            color: var(--primary-red);
+            transform: translateY(-2px); /* Subtle lift for active item */
+        }
+
+        .bottom-nav-item .badge {
+            background-color: var(--primary-red);
+            color: white;
+            font-size: 0.7rem;
+            border-radius: 50%;
+            padding: 2px 6px;
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            display: none; /* Hidden by default */
+        }
+
+        .bottom-nav-item.cart-icon, .bottom-nav-item.wishlist-icon {
+            position: relative;
+        }
+
+
+        /* Main Content Area */
+        main {
+            flex-grow: 1;
+            padding-top: 50px; /* Reduced space for fixed top header */
+        }
+
+        section {
+            display: none; /* All sections hidden by default */
+            padding: 15px 0;
+        }
+
+        section.active {
+            display: block; /* Active section is shown */
+        }
+
+        .card {
+            background-color: var(--surface-color);
+            border-radius: var(--card-border-radius);
+            box-shadow: 0 4px 15px var(--shadow-color);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        /* Image Slider Styling */
+        #image-slider {
+            height: 300px; /* Fixed height for slider */
+            overflow: hidden;
+            position: relative;
+            padding: 0; /* Remove padding for full image display */
+        }
+
+        /* Category Bubbles */
+        .category-bubbles-container {
+            display: flex;
+            overflow-x: auto;
+            gap: 10px;
+            padding: 10px 0;
+            -webkit-overflow-scrolling: touch; /* for smooth scrolling on iOS */
+            scrollbar-width: none;  /* Firefox */
+        }
+
+        .category-bubbles-container::-webkit-scrollbar {
+            display: none; /* Safari and Chrome */
+        }
+
+        .category-chip {
+            flex-shrink: 0;
+            padding: 9px 16px; /* Slightly increased padding */
+            border-radius: 25px; /* More rounded */
+            background-color: var(--muted-color); /* Default, will be overridden */
+            color: white;
+            font-size: 0.95rem; /* Slightly larger font */
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; /* Add border-color to transition */
+            white-space: nowrap;
+            text-transform: capitalize;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for default state */
+        }
+
+        .category-chip:hover {
+            transform: translateY(-3px); /* More pronounced lift */
+            box-shadow: 0 5px 12px rgba(0, 0, 0, 0.15); /* Enhanced shadow on hover */
+        }
+
+        .category-chip.active {
+            transform: scale(1.03); /* Slightly less aggressive scale */
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Stronger shadow for active */
+            border: 3px solid var(--primary-red); /* Thicker border */
+            font-weight: 700; /* Bolder font */
+            color: var(--primary-red); /* Active text color */
+            background-color: var(--surface-color); /* White background for active */
+        }
+
+        /* Responsive Product Grid - will be detailed more in next step */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        @media (min-width: 768px) {
+            .product-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 20px;
+            }
+        }
+
+        /* Product Card */
+        .product-card {
+            background-color: var(--surface-color);
+            border-radius: var(--card-border-radius);
+            box-shadow: 0 4px 10px var(--shadow-color);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px var(--shadow-color);
+        }
+
+        .product-card-image-container {
+            width: 100%;
+            height: 150px; /* Fixed height for images */
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--surface-dark-color);
+        }
+
+        .product-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .product-card-info {
+            padding: 12px 15px; /* Slightly reduced top/bottom padding */
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .product-card-name {
+            font-size: 1rem;
+            font-weight: 500;
+            margin-bottom: 5px;
+            color: var(--text-color);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .product-card-price {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary-red);
+            margin-bottom: 10px;
+        }
+
+        .product-card-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px; /* Slightly reduced margin-top */
+        }
+
+        .product-card-actions .icon-btn {
+            font-size: 1.2rem; /* Slightly larger icon */
+            color: var(--muted-color);
+            transition: color 0.2s ease;
+            width: 36px; /* Fixed width */
+            height: 36px; /* Fixed height */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%; /* Make it round */
+            background-color: var(--surface-dark-color); /* Light background */
+        }
+
+        .product-card-actions .icon-btn:hover {
+            color: var(--primary-red);
+            background-color: #ffe0df; /* Lighter red on hover */
+        }
+
+        .product-card-actions .add-to-cart-btn {
+            background-color: var(--primary-red);
+            color: white;
+            padding: 9px 14px; /* Slightly adjusted padding */
+            border-radius: 8px;
+            font-size: 0.95rem; /* Slightly larger font */
+            flex-grow: 1;
+            margin-left: 10px;
+            box-shadow: 0 2px 8px rgba(231, 74, 59, 0.3); /* Subtle shadow */
+            transition: background-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .product-card-actions .add-to-cart-btn:hover {
+            background-color: #cf3d30; /* Darker red on hover */
+            box-shadow: 0 4px 12px rgba(231, 74, 59, 0.4); /* Enhanced shadow on hover */
+        }
+
+        /* Profile Icon Dropdown Styles */
+        .profile-icon-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .profile-icon {
+            font-size: 1.4rem;
+            color: var(--text-color);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: background-color 0.2s ease, color 0.2s ease;
+            margin-left: 15px;
+        }
+
+        .profile-icon:hover {
+            background-color: var(--hover-color);
+            color: var(--primary-red);
+        }
+
+        .profile-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), 
+                        0 4px 16px rgba(0, 0, 0, 0.1),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            min-width: 300px;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+            margin-top: 8px;
+        }
+
+        /* Dark mode support for dropdown */
+        [data-theme="dark"] .profile-dropdown {
+            background: rgba(30, 30, 30, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 
+                        0 4px 16px rgba(0, 0, 0, 0.2),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .profile-dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .profile-dropdown-content {
+            padding: 24px;
+            background: transparent;
+        }
+
+        .profile-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        /* Dark mode support for profile info - now handled by data-theme selector */
+
+        .profile-avatar {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 14px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15),
+                        inset 0 2px 4px rgba(255, 255, 255, 0.3);
+        }
+
+        .profile-details {
+            flex-grow: 1;
+        }
+
+        .profile-name {
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 4px;
+            font-size: 1rem;
+        }
+
+        .profile-email {
+            color: var(--muted-color);
+            font-size: 0.85rem;
+        }
+
+        .profile-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .profile-action-btn {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 12px 16px;
+            border-radius: 12px;
+            color: #2c3e50 !important;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            width: 100%;
+            text-align: left;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+            justify-content: flex-start;
+        }
+
+        .profile-action-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(231, 74, 59, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        /* Dark mode support for action buttons - now handled by data-theme selector */
+
+        [data-theme="dark"] .profile-action-btn i {
+            color: var(--text-color) !important;
+        }
+
+        #header-login-btn {
+            background: linear-gradient(135deg, rgba(231, 74, 59, 0.9), rgba(207, 61, 48, 0.9));
+            color: white !important;
+            border: 1px solid rgba(231, 74, 59, 0.5);
+            box-shadow: 0 4px 16px rgba(231, 74, 59, 0.3),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+        
+        #header-login-btn i {
+            color: white !important;
+        }
+
+        #header-login-btn:hover {
+            background: linear-gradient(135deg, rgba(207, 61, 48, 0.95), rgba(185, 45, 35, 0.95));
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(231, 74, 59, 0.4),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        }
+
+        #header-logout-btn {
+            color: var(--primary-red) !important;
+            border: 1px solid rgba(231, 74, 59, 0.3);
+            background: rgba(231, 74, 59, 0.1);
+        }
+        
+        #header-logout-btn i {
+            color: var(--primary-red) !important;
+        }
+
+        #header-logout-btn:hover {
+            background: linear-gradient(135deg, rgba(231, 74, 59, 0.9), rgba(207, 61, 48, 0.9));
+            color: white !important;
+            border: 1px solid rgba(231, 74, 59, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(231, 74, 59, 0.4),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+        
+        #header-logout-btn:hover i {
+            color: white !important;
+        }
+
+        /* Skeleton Loading Animations */
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 8px;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .skeleton-product-card {
+            width: 200px;
+            height: 280px;
+            background: var(--surface-color);
+            border-radius: var(--card-border-radius);
+            padding: 15px;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .skeleton-product-image {
+            width: 100%;
+            height: 150px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+
+        .skeleton-product-title {
+            width: 80%;
+            height: 16px;
+            margin-bottom: 10px;
+        }
+
+        .skeleton-product-price {
+            width: 60%;
+            height: 20px;
+            margin-bottom: 15px;
+        }
+
+        .skeleton-product-button {
+            width: 100%;
+            height: 35px;
+            border-radius: 8px;
+        }
+
+        .skeleton-slider {
+            width: 100%;
+            height: 200px;
+            border-radius: 16px;
+        }
+
+        .skeleton-cart-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: var(--surface-color);
+            border-radius: 12px;
+        }
+
+        .skeleton-cart-image {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            margin-right: 15px;
+        }
+
+        .skeleton-cart-info {
+            flex-grow: 1;
+        }
+
+        .skeleton-cart-name {
+            width: 70%;
+            height: 16px;
+            margin-bottom: 8px;
+        }
+
+        .skeleton-cart-price {
+            width: 40%;
+            height: 14px;
+        }
+
+        /* Dark mode skeleton - now handled by data-theme selector */
+
+        [data-theme="dark"] .skeleton {
+            background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+            background-size: 200% 100%;
+        }
+
+        /* Image loading states */
+        .image-loading {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .image-loading::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            z-index: 1;
+        }
+
+        .image-loaded::before {
+            display: none;
+        }
+
+        /* Order Progress Bar Styles */
+        .order-progress-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .order-progress-bar::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--border-color);
+            z-index: 1;
+        }
+
+        .order-progress-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+            flex: 1;
+        }
+
+        .progress-step-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .progress-step-label {
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-align: center;
+            color: var(--muted-color);
+            transition: color 0.3s ease;
+        }
+
+        /* Progress Step States */
+        .order-progress-step.completed .progress-step-icon {
+            background: var(--primary-red);
+            color: white;
+            box-shadow: 0 2px 8px rgba(231, 74, 59, 0.3);
+        }
+
+        .order-progress-step.completed .progress-step-label {
+            color: var(--primary-red);
+            font-weight: 600;
+        }
+
+        .order-progress-step.current .progress-step-icon {
+            background: var(--primary-red);
+            color: white;
+            box-shadow: 0 2px 8px rgba(231, 74, 59, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        .order-progress-step.current .progress-step-label {
+            color: var(--primary-red);
+            font-weight: 600;
+        }
+
+        .order-progress-step.pending .progress-step-icon {
+            background: var(--surface-dark-color);
+            color: var(--muted-color);
+            border: 2px solid var(--border-color);
+        }
+
+        .order-progress-step.pending .progress-step-label {
+            color: var(--muted-color);
+        }
+
+        /* Status Badge Styles */
+        .status-badge {
+            transition: all 0.3s ease;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .status-processing {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .status-shipped {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-delivered {
+            background: #d1f2eb;
+            color: #0e6251;
+            border: 1px solid #a8e6cf;
+        }
+
+        .status-cancelled {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        /* Pulse Animation for Current Step */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* Notification Animations */
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideOutRight {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+
+        [data-theme="dark"] .image-loading::before {
+            background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+        }
+    </style>
+</head>
+<body>
+    <!-- Fixed Top Header -->
+    <header class="header">
+        <div class="logo">
+            <i class="fas fa-store" style="color: var(--primary-red); font-size: 1.5rem; margin-right: 10px;"></i>
+            Chaudhary Kirana Store
+        </div>
+        <div class="icons">
+            <button class="theme-toggle" id="theme-toggle" title="Toggle Theme">
+                <i class="fas fa-moon" id="theme-icon"></i>
+            </button>
+
+            <span id="login-status-indicator"></span>
+            <div class="profile-icon-container">
+                <i class="fas fa-user profile-icon" id="header-profile-icon" title="Profile"></i>
+                <div class="profile-dropdown" id="profile-dropdown">
+                    <div class="profile-dropdown-content">
+                        <div class="profile-info" id="header-profile-info">
+                            <img src="https://i.ibb.co/V0z4HyF2/1bcaf73402827ce2445bfc904fd01f4b.jpg" alt="Profile" class="profile-avatar" id="header-profile-avatar">
+                            <div class="profile-details">
+                                <div class="profile-name" id="header-profile-name">Guest User</div>
+                                <div class="profile-email" id="header-profile-email">Not logged in</div>
+                            </div>
+                        </div>
+                        <div class="profile-actions">
+                            <button class="profile-action-btn" id="header-login-btn">
+                                <i class="fas fa-sign-in-alt"></i> Login
+                            </button>
+                            <button class="profile-action-btn" id="header-profile-btn" style="display: none;">
+                                <i class="fas fa-user-edit"></i> Edit Profile
+                            </button>
+                            <button class="profile-action-btn" id="header-orders-btn" style="display: none;">
+                                <i class="fas fa-box"></i> My Orders
+                            </button>
+                            <button class="profile-action-btn" id="header-logout-btn" style="display: none;">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main>
+        <div class="container">
+            <section id="home" class="active">
+                <h2>Home</h2>
+                <!-- Auto Image Slider -->
+                <div id="image-slider" class="card">
+                    <!-- Slider images will be dynamically loaded here -->
+                </div>
+                <!-- Category Bubbles -->
+                <div id="category-bubbles" class="card" style="margin-top: 20px;">
+                    <div class="category-bubbles-container">
+                        <!-- Category chips will be dynamically loaded here -->
+                    </div>
+                </div>
+                <!-- Product Grid Placeholder -->
+                <div id="product-grid" class="card" style="min-height: 300px; margin-top: 20px;">
+                </div>
+            </section>
+
+            <section id="search">
+                <h2>Search Products</h2>
+                <!-- Search Input -->
+                <div class="card">
+                    <input type="text" id="search-input" placeholder="Search products..." style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px;">
+                </div>
+                <div id="search-results-grid" class="card" style="min-height: 200px; margin-top: 20px;">
+                    <!-- Search results will be dynamically loaded here -->
+                </div>
+            </section>
+
+            <section id="cart">
+                <h2 style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>Your Cart</span>
+                    <button id="view-wishlist-btn" style="background-color: var(--primary-red); color: white; padding: 8px 12px; border-radius: 8px; box-shadow: 0 0 8px rgba(231, 74, 59, 0.4); transition: box-shadow 0.3s ease; font-size: 0.9rem;" onclick="window.location.hash = '#wishlist';">
+                        View Wishlist <i class="fas fa-heart"></i>
+                    </button>
+                </h2>
+                <div id="cart-items" class="card" style="min-height: 150px;">
+                    <!-- Cart items will be dynamically loaded here -->
+                    <p style="text-align: center; color: var(--muted-color);">Your cart is empty.</p>
+                </div>
+                <div id="cart-summary" class="card" style="margin-top: 20px;">
+                    <p>Subtotal: <span id="cart-subtotal">₹0.00</span></p>
+                    <button id="proceed-to-checkout-btn" style="background-color: var(--primary-red); color: white; margin-top: 10px; width: 100%;">Proceed to Checkout</button>
+                </div>
+            </section>
+
+            <section id="wishlist">
+                <h2>Your Wishlist</h2>
+                <div id="wishlist-items" class="card" style="min-height: 150px;">
+                    <!-- Wishlist items will be dynamically loaded here -->
+                    <p style="text-align: center; color: var(--muted-color);">Your wishlist is empty.</p>
+                </div>
+            </section>
+
+            <section id="orders">
+                <h2>My Orders</h2>
+                <div id="order-list" class="card" style="min-height: 150px;">
+                    <!-- Orders will be dynamically loaded here -->
+                    <p style="text-align: center; color: var(--muted-color);">You have no past orders.</p>
+                </div>
+            </section>
+
+            <section id="profile">
+                <h2>Profile</h2>
+                <div class="card" style="display: flex; flex-direction: column; align-items: center; padding: 20px;">
+                    <div style="width: 120px; height: 120px; border-radius: 20px; overflow: hidden; margin-bottom: 20px; box-shadow: 0 4px 15px var(--shadow-color);">
+                        <img id="profile-pic-display" src="https://i.ibb.co/V0z4HyF2/1bcaf73402827ce2445bfc904fd01f4b.jpg" alt="Profile Picture" style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
+                    <div style="text-align: left; width: 100%;">
+                        <p><strong>User ID:</strong> <span id="profile-user-id">Not available</span></p>
+                        <p><strong>Email:</strong> <span id="profile-email">Not logged in</span></p>
+                    </div>
+                    <button id="edit-profile-btn" style="background-color: var(--primary-red); color: white; margin-top: 20px; padding: 10px 20px; border-radius: 8px;">Edit Profile</button>
+                </div>
+            </section>
+
+            <!-- Edit Profile Modal -->
+            <div id="edit-profile-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 2000;">
+                <div class="card" style="width: 90%; max-width: 400px; padding: 30px; text-align: center; position: relative;">
+                    <button class="icon-btn" style="position: absolute; top: 10px; right: 10px; font-size: 1.5rem;" onclick="document.getElementById('edit-profile-modal').style.display = 'none';"><i class="fas fa-times"></i></button>
+                    <h3>Edit Profile</h3>
+                    <form id="edit-profile-form">
+                        <input type="text" id="edit-profile-name" placeholder="Your Name" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid var(--border-color); border-radius: 8px; display: none;">
+                        <input type="text" id="edit-profile-pic-url" placeholder="Profile Picture URL" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid var(--border-color); border-radius: 8px; display: none;">
+                        <button type="submit" style="background-color: var(--primary-red); color: white; width: 100%; margin-top: 10px;">Save Profile</button>
+                    </form>
+                </div>
+            </div>
+
+            <section id="about">
+                <h2>About Us</h2>
+                <div class="card">
+                    <p>This is a sample e-commerce application built with modern web technologies and Firebase.</p>
+                </div>
+            </section>
+
+            <section id="contact">
+                <h2>Contact Us</h2>
+                <div class="card">
+                    <form id="contact-form">
+                        <input type="text" id="contact-name" placeholder="Your Name" required style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid var(--border-color); border-radius: 8px;">
+                        <input type="email" id="contact-email" placeholder="Your Email" required style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid var(--border-color); border-radius: 8px;">
+                        <textarea id="contact-message" placeholder="Your Message" rows="5" required style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid var(--border-color); border-radius: 8px;"></textarea>
+                        <button type="submit" style="background-color: var(--primary-red); color: white;">Send Message</button>
+                        <p id="contact-form-message" style="margin-top: 15px; display: none;"></p>
+                    </form>
+                </div>
+            </section>
+
+            <section id="menu">
+                <h2>Menu</h2>
+                <div class="card">
+                    <ul style="list-style: none; padding: 0; text-align: left;">
+                        <li id="menu-login-link" style="display: list-item;"><a href="#" class="menu-link" style="display: block; padding: 15px 0; border-bottom: 1px solid var(--border-color); font-size: 1.1rem; color: var(--text-color);"> <i class="fas fa-sign-in-alt" style="margin-right: 10px;"></i>Login</a></li>
+                        <li id="menu-profile-link" style="display: none;"><a href="#profile" class="menu-link" style="display: block; padding: 15px 0; border-bottom: 1px solid var(--border-color); font-size: 1.1rem; color: var(--text-color);"> <i class="fas fa-user-circle" style="margin-right: 10px;"></i>Profile</a></li>
+                        <li id="menu-orders-link" style="display: none;"><a href="#orders" class="menu-link" style="display: block; padding: 15px 0; border-bottom: 1px solid var(--border-color); font-size: 1.1rem; color: var(--text-color);"> <i class="fas fa-receipt" style="margin-right: 10px;"></i>My Orders</a></li>
+                        <li><a href="#about" class="menu-link" style="display: block; padding: 15px 0; border-bottom: 1px solid var(--border-color); font-size: 1.1rem; color: var(--text-color);"> <i class="fas fa-info-circle" style="margin-right: 10px;"></i>About Us</a></li>
+                        <li><a href="#contact" class="menu-link" style="display: block; padding: 15px 0; border-bottom: 1px solid var(--border-color); font-size: 1.1rem; color: var(--text-color);"> <i class="fas fa-envelope" style="margin-right: 10px;"></i>Contact</a></li>
+                        <li id="menu-logout-link" style="display: none;"><a href="#" class="menu-link" style="display: block; padding: 15px 0; border-bottom: 1px solid var(--border-color); font-size: 1.1rem; color: var(--primary-red);"> <i class="fas fa-sign-out-alt" style="margin-right: 10px;"></i>Logout</a></li>
+                    </ul>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Fixed Bottom Navigation -->
+    <nav class="bottom-nav">
+        <a href="#home" class="bottom-nav-item active" data-route="home">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+        <a href="#search" class="bottom-nav-item" data-route="search">
+            <i class="fas fa-search" id="search-nav-icon"></i>
+            <span>Search</span>
+        </a>
+        <a href="#cart" class="bottom-nav-item cart-icon" data-route="cart">
+            <i class="fas fa-shopping-cart"></i>
+            <span class="badge" id="cart-badge">0</span>
+            <span>Cart</span>
+        </a>
+        <a href="#menu" class="bottom-nav-item" data-route="menu" id="menu-nav-item">
+            <i class="fas fa-bars"></i>
+            <span>Menu</span>
+        </a>
+    </nav>
+
+    <!-- Login/Register Modal Placeholder -->
+    <div id="auth-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 2000;">
+        <div class="card" style="width: 90%; max-width: 400px; padding: 30px; text-align: center;">
+            <h3>Login / Register</h3>
+            <form id="auth-form">
+                <input type="email" id="auth-email" placeholder="Email" required style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid var(--border-color); border-radius: 8px;">
+                <input type="password" id="auth-password" placeholder="Password" required style="width: 100%; padding: 10px; margin-bottom: 20px; border: 1px solid var(--border-color); border-radius: 8px;">
+                
+                <!-- New fields for registration -->
+                <input type="text" id="auth-name" placeholder="Your Name" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid var(--border-color); border-radius: 8px; display: none;">
+                <select id="auth-gender" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid var(--border-color); border-radius: 8px; display: none;">
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                </select>
+                <input type="number" id="auth-age" placeholder="Your Age" min="1" max="120" style="width: 100%; padding: 10px; margin-bottom: 20px; border: 1px solid var(--border-color); border-radius: 8px; display: none;">
+
+                <p id="auth-error" style="color: var(--primary-red); margin-bottom: 15px; display: none;"></p>
+                <button type="submit" id="auth-submit-btn" style="background-color: var(--primary-red); color: white; width: 100%; margin-bottom: 10px;">Login</button>
+                <button type="button" id="toggle-auth-mode" style="background-color: var(--muted-color); color: white; width: 100%; margin-bottom: 10px;">Switch to Register</button>
+            </form>
+            <button class="close-modal-btn" style="background-color: var(--muted-color); color: white; width: 100%;" onclick="document.getElementById('auth-modal').style.display = 'none';">Close</button>
+        </div>
+    </div>
+
+    <!-- Product Detail Modal Placeholder -->
+    <div id="product-detail-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 2000;">
+        <div class="card" style="width: 90%; max-width: 600px; padding: 30px; position: relative;">
+            <button class="icon-btn" style="position: absolute; top: 10px; right: 10px; font-size: 1.5rem;" onclick="document.getElementById('product-detail-modal').style.display = 'none';"><i class="fas fa-times"></i></button>
+            <img id="product-detail-image" src="" alt="Product Image" style="max-width: 100%; height: auto; border-radius: var(--card-border-radius); margin-bottom: 15px;">
+            <h3 id="product-detail-name"></h3>
+            <p id="product-detail-price" style="font-weight: 600; font-size: 1.2rem; color: var(--primary-red);"></p>
+            <p id="product-detail-description"></p>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="add-to-cart-btn" style="background-color: var(--primary-red); color: white; flex: 1;">Add to Cart</button>
+                <button class="order-now-btn" style="background-color: #28a745; color: white; flex: 1; font-weight: 600;"><i class="fas fa-shopping-bag" style="margin-right: 8px;"></i>Order Now</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Menu Modal Placeholder -->
+    <div id="menu-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--surface-color); z-index: 1500; padding-top: 60px;">
+        <button class="icon-btn" style="position: absolute; top: 15px; right: 15px; font-size: 1.8rem; color: var(--text-color);" onclick="document.getElementById('menu-modal').style.display = 'none';"><i class="fas fa-times"></i></button>
+        <div class="container" style="padding-top: 30px;">
+            <ul style="list-style: none; padding: 0; text-align: left;">
+                <li id="menu-login-link" style="display: list-item;"><a href="#" class="menu-link" style="display: block; padding: 15px 0; border-bottom: 1px solid var(--border-color); font-size: 1.1rem; color: var(--text-color);"> <i class="fas fa-sign-in-alt" style="margin-right: 10px;"></i>Login</a></li>
+                <li id="menu-profile-link" style="display: none;"><a href="#profile" class="menu-link" style="display: block; padding: 15px 0; border-bottom: 1px solid var(--border-color); font-size: 1.1rem; color: var(--text-color);"> <i class="fas fa-user-circle" style="margin-right: 10px;"></i>Profile</a></li>
+                <li id="menu-orders-link" style="display: none;"><a href="#orders" class="menu-link" style="display: block; padding: 15px 0; border-bottom: 1px solid var(--border-color); font-size: 1.1rem; color: var(--text-color);"> <i class="fas fa-receipt" style="margin-right: 10px;"></i>My Orders</a></li>
+                <li><a href="#about" class="menu-link" style="display: block; padding: 15px 0; border-bottom: 1px solid var(--border-color); font-size: 1.1rem; color: var(--text-color);"> <i class="fas fa-info-circle" style="margin-right: 10px;"></i>About Us</a></li>
+                <li><a href="#contact" class="menu-link" style="display: block; padding: 15px 0; border-bottom: 1px solid var(--border-color); font-size: 1.1rem; color: var(--text-color);"> <i class="fas fa-envelope" style="margin-right: 10px;"></i>Contact</a></li>
+                <li id="menu-logout-link" style="display: none;"><a href="#" class="menu-link" style="display: block; padding: 15px 0; border-bottom: 1px solid var(--border-color); font-size: 1.1rem; color: var(--primary-red);"> <i class="fas fa-sign-out-alt" style="margin-right: 10px;"></i>Logout</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Checkout Shipping Modal -->
+    <div id="shipping-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 2000;">
+        <div class="card" style="width: 90%; max-width: 400px; padding: 30px; position: relative; text-align: center;">
+            <button class="icon-btn" style="position: absolute; top: 10px; right: 10px; font-size: 1.5rem;" onclick="document.getElementById('shipping-modal').style.display = 'none';"><i class="fas fa-times"></i></button>
+            <h3>Shipping Information</h3>
+            <form id="shipping-form">
+                <input type="text" id="shipping-name" placeholder="Full Name" required style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid var(--border-color); border-radius: 8px;">
+                                        <input type="tel" id="shipping-mobile" placeholder="Mobile Number (10 digits)" required maxlength="10" pattern="[0-9]{10}" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)" style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid var(--border-color); border-radius: 8px; font-family: monospace;">
+                <textarea id="shipping-address" placeholder="Full Shipping Address" rows="3" required style="width: 100%; padding: 10px; margin-bottom: 20px; border: 1px solid var(--border-color); border-radius: 8px;"></textarea>
+                <button type="submit" style="background-color: var(--primary-red); color: white; width: 100%;">Place Order</button>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        // Firebase Configuration (Placeholder)
+        const firebaseConfig = {
+  apiKey: "AIzaSyBGh16sYlLk1e9nkhcLu7IPTZk807qeLZM",
+  authDomain: "test-60bf6.firebaseapp.com",
+  databaseURL: "https://test-60bf6-default-rtdb.firebaseio.com",
+  projectId: "test-60bf6",
+  storageBucket: "test-60bf6.firebasestorage.app",
+  messagingSenderId: "208881094528",
+  appId: "1:208881094528:web:114768e2de5956cae6fb65"
+};
+
+        // Initialize Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
+        import { getDatabase, ref, push, set, onValue, remove, update, get } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js";
+        import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-messaging.js";
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+        const messaging = getMessaging(app);
+
+        // FCM Configuration
+        const VAPID_KEY = 'BBFeIMCAfLWcKzaYe4I6jXtVsR61Vu5tl5M7ZPF6BYkeeJ8XsybOnWF2dANauR-LaVzxoLo3F_AZUK8vg7AlBMc';
+
+        // Initialize FCM and request permission
+        async function initializeFCM() {
+            try {
+                // Check if permission is already granted or denied
+                let permission = Notification.permission;
+                
+                // If permission is default (not asked yet), request it
+                if (permission === 'default') {
+                    permission = await Notification.requestPermission();
+                }
+                
+                // Save permission state to localStorage
+                localStorage.setItem('notificationPermission', permission);
+                
+                if (permission === 'granted') {
+                    console.log('Notification permission granted');
+                    
+                    // Check if we're in a supported environment for FCM
+                    if (window.location.protocol === 'file:' || window.location.protocol === 'null') {
+                        console.log('FCM not supported on file:// protocol, skipping token generation');
+                        return;
+                    }
+                    
+                    // Get FCM token
+                    const token = await getToken(messaging, { vapidKey: VAPID_KEY });
+                    if (token) {
+                        console.log('FCM Token:', token);
+                        
+                        // Save token to user's profile if logged in
+                        const user = auth.currentUser;
+                        if (user) {
+                            const userTokenRef = ref(database, `users/${user.uid}/fcmToken`);
+                            await set(userTokenRef, token);
+                        }
+                    }
+                } else if (permission === 'denied') {
+                    console.log('Notification permission denied - user blocked it');
+                    // Don't show error, just log it
+                } else {
+                    console.log('Notification permission not granted');
+                }
+            } catch (error) {
+                console.error('Error initializing FCM:', error);
+                
+                // More specific error handling for FCM
+                if (error.message && error.message.includes('failed-service-worker-registration')) {
+                    console.log('FCM service worker registration failed - this is expected in some environments');
+                } else if (error.message && error.message.includes('messaging/permission-blocked')) {
+                    console.log('Notification permission blocked by user');
+                }
+                
+                // If FCM fails, still continue with the app
+            }
+        }
+
+        // Handle foreground messages
+        onMessage(messaging, (payload) => {
+            console.log('Foreground message received:', payload);
+            
+            // Show notification using Notification API
+            if (Notification.permission === 'granted') {
+                const notification = new Notification(payload.notification?.title || 'New Message', {
+                    body: payload.notification?.body || 'You have a new message',
+                    icon: payload.notification?.icon || '/favicon.ico',
+                    badge: '/favicon.ico',
+                    tag: 'fcm-notification'
+                });
+                
+                // Auto-close notification after 5 seconds
+                setTimeout(() => {
+                    notification.close();
+                }, 5000);
+            }
+        });
+
+        // Initialize FCM when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize FCM first
+            initializeFCM().catch(error => {
+                console.log('FCM initialization failed, continuing without notifications:', error.message);
+            });
+            
+            // Try to register service worker (may fail in some environments)
+            registerServiceWorker().then(registration => {
+                if (registration) {
+                    console.log('Service Worker registered successfully');
+                } else {
+                    console.log('Service Worker registration skipped (not supported in current environment)');
+                }
+            }).catch(error => {
+                console.log('Service Worker registration failed:', error.message);
+            });
+        });
+
+        // Register service worker inline with Blob
+        async function registerServiceWorker() {
+            try {
+                // Check if service worker is supported
+                if (!('serviceWorker' in navigator)) {
+                    console.log('Service Worker not supported in this browser');
+                    return null;
+                }
+
+                // Check if we're running on a supported protocol (https or localhost)
+                if (window.location.protocol === 'file:' || window.location.protocol === 'null') {
+                    console.log('Service Worker cannot be registered on file:// protocol. Please use a local server or HTTPS.');
+                    return null;
+                }
+
+                // For localhost development, try to register the Firebase messaging service worker
+                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                    try {
+                        // First try to register the actual Firebase messaging service worker file
+                        const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
+                            scope: '/firebase-cloud-messaging-push-scope'
+                        });
+                        console.log('Firebase Messaging Service Worker registered successfully for localhost:', registration);
+                        return registration;
+                    } catch (localhostError) {
+                        console.log('Failed to register Firebase messaging service worker for localhost:', localhostError);
+                        
+                        // Fallback to minimal service worker if the file doesn't exist
+                        try {
+                            const minimalServiceWorkerCode = `
+                                // Minimal Service Worker for Localhost Development
+                                self.addEventListener('install', (event) => {
+                                    console.log('Service Worker installing...');
+                                    self.skipWaiting();
+                                });
+
+                                self.addEventListener('activate', (event) => {
+                                    console.log('Service Worker activating...');
+                                    event.waitUntil(self.clients.claim());
+                                });
+
+                                self.addEventListener('message', (event) => {
+                                    console.log('Service Worker message received:', event.data);
+                                });
+                            `;
+
+                            const blob = new Blob([minimalServiceWorkerCode], { type: 'application/javascript' });
+                            const serviceWorkerUrl = URL.createObjectURL(blob);
+
+                            const fallbackRegistration = await navigator.serviceWorker.register(serviceWorkerUrl);
+                            console.log('Minimal Service Worker registered successfully for localhost (fallback):', fallbackRegistration);
+
+                            // Clean up the Blob URL
+                            URL.revokeObjectURL(serviceWorkerUrl);
+
+                            return fallbackRegistration;
+                        } catch (fallbackError) {
+                            console.log('Failed to register fallback service worker for localhost:', fallbackError);
+                            return null;
+                        }
+                    }
+                }
+
+                // For production HTTPS, try to register the full Firebase service worker
+                if (window.location.protocol === 'https:') {
+                    try {
+                        // Create service worker code as a Blob
+                        const serviceWorkerCode = `
+                            // Firebase Cloud Messaging Service Worker
+                            importScripts('https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js');
+                            importScripts('https://www.gstatic.com/firebasejs/9.6.10/firebase-messaging-compat.js');
+
+                            // Firebase configuration
+                            const firebaseConfig = {
+                                apiKey: 'AIzaSyBGh16sYlLk1e9nkhcLu7IPTZk807qeLZM',
+                                authDomain: 'test-60bf6.firebaseapp.com',
+                                databaseURL: 'https://test-60bf6-default-rtdb.firebaseio.com',
+                                projectId: 'test-60bf6',
+                                storageBucket: 'test-60bf6.firebasestorage.app',
+                                messagingSenderId: '208881094528',
+                                appId: '1:208881094528:web:114768e2de5956cae6fb65'
+                            };
+
+                            // Initialize Firebase
+                            firebase.initializeApp(firebaseConfig);
+                            const messaging = firebase.messaging();
+
+                            // Handle background messages
+                            messaging.onBackgroundMessage((payload) => {
+                                console.log('Background message received:', payload);
+
+                                const notificationTitle = payload.notification?.title || 'New Message';
+                                const notificationOptions = {
+                                    body: payload.notification?.body || 'You have a new message',
+                                    icon: payload.notification?.icon || '/favicon.ico',
+                                    badge: '/favicon.ico',
+                                    tag: 'fcm-background-notification',
+                                    data: payload.data || {}
+                                };
+
+                                return self.registration.showNotification(notificationTitle, notificationOptions);
+                            });
+
+                            // Handle notification click
+                            self.addEventListener('notificationclick', (event) => {
+                                console.log('Notification clicked:', event);
+                                event.notification.close();
+                                
+                                // Focus on the main page if it's open
+                                event.waitUntil(
+                                    clients.matchAll({ type: 'window' }).then((clientList) => {
+                                        for (const client of clientList) {
+                                            if (client.url.includes('index.html') && 'focus' in client) {
+                                                return client.focus();
+                                            }
+                                }
+                                if (clients.openWindow) {
+                                    return clients.openWindow('/index.html');
+                                }
+                            })
+                        );
+                    });
+                `;
+
+                        const blob = new Blob([serviceWorkerCode], { type: 'application/javascript' });
+                        const serviceWorkerUrl = URL.createObjectURL(blob);
+
+                        const registration = await navigator.serviceWorker.register(serviceWorkerUrl);
+                        console.log('Firebase Service Worker registered successfully:', registration);
+
+                        // Clean up the Blob URL
+                        URL.revokeObjectURL(serviceWorkerUrl);
+
+                        return registration;
+                    } catch (httpsError) {
+                        console.log('Failed to register Firebase service worker for HTTPS:', httpsError);
+                        return null;
+                    }
+                }
+
+                return null;
+            } catch (error) {
+                console.error('Error registering service worker:', error);
+                return null;
+            }
+        }
+
+        // Function to send order notification to all admin tokens
+        async function sendOrderNotification(orderData) {
+            try {
+                // Get all admin tokens from adminTokens/
+                const adminTokensRef = ref(database, 'adminTokens');
+                const adminTokensSnapshot = await get(adminTokensRef);
+                const adminTokens = adminTokensSnapshot.val();
+                
+                if (!adminTokens) {
+                    console.log('No admin tokens found');
+                    return;
+                }
+                
+                // For each admin token, send a notification
+                for (const adminId in adminTokens) {
+                    const adminToken = adminTokens[adminId];
+                    if (adminToken) {
+                        // Store notification in database for the admin
+                        const adminNotificationRef = ref(database, `adminNotifications/${adminId}`);
+                        const newNotificationRef = push(adminNotificationRef);
+                        
+                        const notificationData = {
+                            id: newNotificationRef.key,
+                            type: 'new_order',
+                            title: 'New Order Received!',
+                            body: `Order #${orderData.orderId} from ${orderData.shippingName}`,
+                            orderData: orderData,
+                            timestamp: Date.now(),
+                            read: false
+                        };
+                        
+                        await set(newNotificationRef, notificationData);
+                    }
+                }
+                
+                console.log('Order notifications sent to admins');
+            } catch (error) {
+                console.error('Error sending order notification:', error);
+            }
+        }
+
+
+
+
+
+
+
+        // --- SPA Routing Logic ---
+        const routes = {
+            '#home': 'home',
+            '#search': 'search',
+            '#cart': 'cart',
+            '#wishlist': 'wishlist',
+            '#orders': 'orders',
+            '#profile': 'profile',
+            '#about': 'about',
+            '#contact': 'contact',
+            '#menu': 'menu' // Special case for menu modal
+        };
+
+        function showSection(sectionId) {
+            document.querySelectorAll('section').forEach(section => {
+                section.classList.remove('active');
+            });
+            const targetSection = document.getElementById(sectionId);
+            if (targetSection) {
+                targetSection.classList.add('active');
+            }
+        }
+
+        function handleHashChange() {
+            const hash = window.location.hash || '#home';
+            const route = routes[hash];
+
+            document.querySelectorAll('.bottom-nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            if (route) {
+                showSection(route);
+                const activeNavItem = document.querySelector(`.bottom-nav-item[data-route="${route}"]`);
+                if (activeNavItem) {
+                    activeNavItem.classList.add('active');
+                }
+            } else {
+                // Default to home if hash is not recognized
+                window.location.hash = '#home';
+            }
+        }
+
+        // Initial route handling
+        window.addEventListener('hashchange', handleHashChange);
+        window.addEventListener('load', handleHashChange);
+
+        // --- Firebase Authentication ---
+        let authForm, authEmailInput, authPasswordInput, authError, authSubmitBtn, toggleAuthModeBtn, authNameInput, authGenderSelect, authAgeInput;
+        let loginStatusIndicator, menuLoginLink, menuProfileLink, menuOrdersLink, menuLogoutLink, profileEmailSpan, profilePicDisplay, editProfileBtn, editProfileModal, editProfileForm, editProfileNameInput, editProfilePicUrlInput, profileUserIdSpan;
+        let isLoginMode = true; // Default to login mode
+
+        function showAuthError(message) {
+            if (authError) {
+                authError.textContent = message;
+                authError.style.display = 'block';
+            }
+        }
+
+        function hideAuthError() {
+            if (authError) {
+                authError.textContent = '';
+                authError.style.display = 'none';
+            }
+        }
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // User is signed in
+                loginStatusIndicator.style.display = 'block';
+                menuLoginLink.style.display = 'none';
+                menuProfileLink.style.display = 'list-item';
+                menuOrdersLink.style.display = 'list-item';
+                menuLogoutLink.style.display = 'list-item';
+
+                profileEmailSpan.textContent = user.email;
+                profileUserIdSpan.textContent = user.uid; // Display User ID
+
+                // Update header profile dropdown
+                const headerProfileName = document.getElementById('header-profile-name');
+                const headerProfileEmail = document.getElementById('header-profile-email');
+                const headerLoginBtn = document.getElementById('header-login-btn');
+                const headerProfileBtn = document.getElementById('header-profile-btn');
+                const headerOrdersBtn = document.getElementById('header-orders-btn');
+                const headerLogoutBtn = document.getElementById('header-logout-btn');
+
+                if (headerProfileName) headerProfileName.textContent = user.displayName || user.email.split('@')[0];
+                if (headerProfileEmail) headerProfileEmail.textContent = user.email;
+                if (headerLoginBtn) headerLoginBtn.style.display = 'none';
+                if (headerProfileBtn) headerProfileBtn.style.display = 'flex';
+                if (headerOrdersBtn) headerOrdersBtn.style.display = 'flex';
+                if (headerLogoutBtn) headerLogoutBtn.style.display = 'flex';
+
+                // No longer fetching name and age for display in this section
+                // const userProfileRef = ref(database, `users/${user.uid}/profile`);
+                // onValue(userProfileRef, (snapshot) => {
+                //     const profileData = snapshot.val();
+                //     if (profileData) {
+                //         profileNameDisplay.textContent = profileData.name || user.displayName || 'Not set';
+                //         profileAgeDisplay.textContent = profileData.age || 'Not set';
+                //     } else {
+                //         profileNameDisplay.textContent = user.displayName || 'Not set';
+                //         profileAgeDisplay.textContent = 'Not set';
+                //     }
+                // });
+
+                profilePicDisplay.src = 'https://i.ibb.co/V0z4HyF2/1bcaf73402827ce2445bfc904fd01f4b.jpg'; // Always use the specified image
+                editProfileBtn.style.display = 'none'; // Hide Edit Profile button in this section
+                editProfileModal.style.display = 'none'; // Hide edit modal by default
+
+                // Sync guest cart if exists
+                const guestCart = getLocalCart();
+                if (Object.keys(guestCart).length > 0) {
+                    const userCartRef = ref(database, `users/${user.uid}/cart`);
+                    onValue(userCartRef, async (snapshot) => {
+                        const userCart = snapshot.val() || {};
+                        const mergedCart = { ...userCart };
+                        for (const productId in guestCart) {
+                            if (mergedCart[productId]) {
+                                mergedCart[productId].quantity += guestCart[productId].quantity;
+                            } else {
+                                mergedCart[productId] = guestCart[productId];
+                            }
+                        }
+                        await set(userCartRef, mergedCart); // Overwrite with merged cart
+                        localStorage.removeItem('guestCart'); // Clear local guest cart
+                        // Listener automatically removed with onlyOnce: true
+                    }, { onlyOnce: true });
+                }
+                // Firebase listeners are now set up in DOMContentLoaded
+
+                // Sync guest wishlist if exists
+                const guestWishlist = getLocalWishlist();
+                if (Object.keys(guestWishlist).length > 0) {
+                    const userWishlistRef = ref(database, `users/${user.uid}/wishlist`);
+                    onValue(userWishlistRef, async (snapshot) => {
+                        const userWishlist = snapshot.val() || {};
+                        const mergedWishlist = { ...userWishlist };
+                        for (const productId in guestWishlist) {
+                            if (!mergedWishlist[productId]) {
+                                mergedWishlist[productId] = guestWishlist[productId];
+                            }
+                        }
+                        await set(userWishlistRef, mergedWishlist);
+                        localStorage.removeItem('guestWishlist');
+                        // Listener automatically removed with onlyOnce: true
+                    }, { onlyOnce: true });
+                }
+                // Firebase listeners are now set up in DOMContentLoaded
+
+            } else {
+                // User is signed out
+                loginStatusIndicator.style.display = 'none';
+                menuLoginLink.style.display = 'list-item';
+                menuProfileLink.style.display = 'none';
+                menuOrdersLink.style.display = 'none';
+                menuLogoutLink.style.display = 'none';
+                profileEmailSpan.textContent = 'Not logged in';
+                profileUserIdSpan.textContent = 'Not available'; // Clear User ID
+                profilePicDisplay.src = 'https://i.ibb.co/V0z4HyF2/1bcaf73402827ce2445bfc904fd01f4b.jpg'; // Always use the specified image
+                editProfileBtn.style.display = 'none';
+                editProfileModal.style.display = 'none'; // Hide edit modal if logged out
+
+                // Update header profile dropdown for logged out state
+                const headerProfileName = document.getElementById('header-profile-name');
+                const headerProfileEmail = document.getElementById('header-profile-email');
+                const headerLoginBtn = document.getElementById('header-login-btn');
+                const headerProfileBtn = document.getElementById('header-profile-btn');
+                const headerOrdersBtn = document.getElementById('header-orders-btn');
+                const headerLogoutBtn = document.getElementById('header-logout-btn');
+
+                if (headerProfileName) headerProfileName.textContent = 'Guest User';
+                if (headerProfileEmail) headerProfileEmail.textContent = 'Not logged in';
+                if (headerLoginBtn) headerLoginBtn.style.display = 'flex';
+                if (headerProfileBtn) headerProfileBtn.style.display = 'none';
+                if (headerOrdersBtn) headerOrdersBtn.style.display = 'none';
+                if (headerLogoutBtn) headerLogoutBtn.style.display = 'none';
+
+                renderCart(); // Render local cart if logged out
+                renderWishlist(); // Render local wishlist if logged out
+            }
+        });
+
+        // Logout functionality moved to DOMContentLoaded
+
+        // --- Image Slider ---
+        let imageSlider;
+        let currentSlide = 0;
+        let sliderImages = [];
+        let sliderInterval;
+
+                function renderSlider() {
+            console.log("renderSlider called with", sliderImages.length, "images"); // Debug log
+            
+            if (sliderImages.length === 0) {
+                console.log("No slider images found, showing fallback"); // Debug log
+                // Show skeleton while loading
+                showSliderSkeleton();
+                return;
+            }
+            
+            imageSlider.innerHTML = ''; // Clear existing content
+
+            const slideContainer = document.createElement('div');
+            slideContainer.style.width = '100%';
+            slideContainer.style.height = '100%';
+            slideContainer.style.position = 'relative';
+            slideContainer.style.overflow = 'hidden';
+
+            sliderImages.forEach((imageObj, index) => {
+                const imgElement = document.createElement('img');
+                imgElement.src = imageObj.downloadURL;
+                imgElement.alt = `Slide ${index + 1}`;
+                imgElement.style.width = '100%';
+                imgElement.style.height = '100%';
+                imgElement.style.objectFit = 'cover';
+                imgElement.style.position = 'absolute';
+                imgElement.style.transition = 'opacity 0.5s ease-in-out';
+                imgElement.style.opacity = index === currentSlide ? 1 : 0;
+                slideContainer.appendChild(imgElement);
+            });
+
+            // Prev/Next Buttons
+            const prevButton = document.createElement('button');
+            prevButton.innerHTML = '<i class="fas fa-chevron-left"></i>';
+            prevButton.className = 'slider-btn slider-prev';
+            prevButton.style.position = 'absolute';
+            prevButton.style.top = '50%';
+            prevButton.style.left = '10px';
+            prevButton.style.transform = 'translateY(-50%)';
+            prevButton.style.backgroundColor = 'rgba(0,0,0,0.5)';
+            prevButton.style.color = 'white';
+            prevButton.style.border = 'none';
+            prevButton.style.borderRadius = '50%';
+            prevButton.style.width = '40px';
+            prevButton.style.height = '40px';
+            prevButton.style.fontSize = '1.2rem';
+            prevButton.style.zIndex = '10';
+            prevButton.addEventListener('click', prevSlide);
+            slideContainer.appendChild(prevButton);
+
+            const nextButton = document.createElement('button');
+            nextButton.innerHTML = '<i class="fas fa-chevron-right"></i>';
+            nextButton.className = 'slider-btn slider-next';
+            nextButton.style.position = 'absolute';
+            nextButton.style.top = '50%';
+            nextButton.style.right = '10px';
+            nextButton.style.transform = 'translateY(-50%)';
+            nextButton.style.backgroundColor = 'rgba(0,0,0,0.5)';
+            nextButton.style.color = 'white';
+            nextButton.style.border = 'none';
+            nextButton.style.borderRadius = '50%';
+            nextButton.style.width = '40px';
+            nextButton.style.height = '40px';
+            nextButton.style.fontSize = '1.2rem';
+            nextButton.style.zIndex = '10';
+            nextButton.addEventListener('click', nextSlide);
+            slideContainer.appendChild(nextButton);
+
+            imageSlider.innerHTML = '';
+            imageSlider.appendChild(slideContainer);
+
+            startSliderAutoAdvance();
+        }
+
+        function showSlide(index) {
+            const slides = imageSlider.querySelectorAll('img');
+            if (slides.length === 0) return;
+
+            slides.forEach((slide, i) => {
+                slide.style.opacity = i === index ? 1 : 0;
+            });
+        }
+
+        function nextSlide() {
+            currentSlide = (currentSlide + 1) % sliderImages.length;
+            showSlide(currentSlide);
+            resetSliderAutoAdvance();
+        }
+
+        function prevSlide() {
+            currentSlide = (currentSlide - 1 + sliderImages.length) % sliderImages.length;
+            showSlide(currentSlide);
+            resetSliderAutoAdvance();
+        }
+
+        function startSliderAutoAdvance() {
+            clearInterval(sliderInterval);
+            if (sliderImages.length > 1) {
+                sliderInterval = setInterval(nextSlide, 5000);
+            }
+        }
+
+        function resetSliderAutoAdvance() {
+            clearInterval(sliderInterval);
+            startSliderAutoAdvance();
+        }
+
+        // Fetch slider images from Firebase
+        const sliderImagesRef = ref(database, 'sliderImages');
+        onValue(sliderImagesRef, (snapshot) => {
+            const data = snapshot.val();
+            console.log("Slider data from Firebase:", data); // Debug log
+            sliderImages = [];
+            if (data) {
+                for (const key in data) {
+                    sliderImages.push(data[key]);
+                }
+            }
+            console.log("Slider images array:", sliderImages); // Debug log
+            currentSlide = 0; // Reset to first slide on data change
+            renderSlider();
+        });
+
+        // --- Category Bubbles ---
+        let categoryBubblesContainer;
+        const productsRef = ref(database, 'products');
+        let activeCategory = 'All';
+        let allProducts = {}; // Store all products to filter locally
+
+        const categoryColors = {
+            'All': 'var(--category-all)',
+            'Fashion': 'var(--category-fashion)',
+            'Electronics': 'var(--category-electronics)',
+            'Home': 'var(--category-home)',
+            'Books': 'var(--category-books)',
+            'Food': 'var(--category-food)',
+            // Add more as needed, or generate dynamically
+        };
+
+        function renderCategoryBubbles(categories) {
+            categoryBubblesContainer.innerHTML = ''; // Clear existing chips
+
+            const allChip = document.createElement('div');
+            allChip.classList.add('category-chip');
+            allChip.textContent = 'All';
+            allChip.style.backgroundColor = categoryColors['All'] || 'var(--muted-color)';
+            if (activeCategory === 'All') {
+                allChip.classList.add('active');
+                allChip.style.color = 'var(--text-color)'; // Set text color for active 'All' chip
+            }
+            allChip.addEventListener('click', () => {
+                activeCategory = 'All';
+                filterProductsByCategory();
+                renderCategoryBubbles(categories); // Re-render to update active state
+            });
+            categoryBubblesContainer.appendChild(allChip);
+
+            categories.forEach(category => {
+                const chip = document.createElement('div');
+                chip.classList.add('category-chip');
+                chip.textContent = category;
+                chip.style.backgroundColor = categoryColors[category] || 'var(--muted-color)'; // Use predefined or random color
+                if (activeCategory === category) {
+                    chip.classList.add('active');
+                    chip.style.color = 'var(--text-color)'; // Set text color for active chip
+                }
+                chip.addEventListener('click', () => {
+                    activeCategory = category;
+                    filterProductsByCategory();
+                    renderCategoryBubbles(categories); // Re-render to update active state
+                });
+                categoryBubblesContainer.appendChild(chip);
+            });
+        }
+
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
+        // --- Skeleton Loading Functions ---
+        function showProductSkeleton(targetContainer, count = 6) {
+            targetContainer.innerHTML = ''; // Clear existing content
+            targetContainer.classList.add('product-grid'); // Add grid styling
+            
+            for (let i = 0; i < count; i++) {
+                const skeletonCard = document.createElement('div');
+                skeletonCard.className = 'skeleton-product-card';
+                skeletonCard.innerHTML = `
+                    <div class="skeleton skeleton-product-image"></div>
+                    <div class="skeleton skeleton-product-title"></div>
+                    <div class="skeleton skeleton-product-price"></div>
+                    <div class="skeleton skeleton-product-button"></div>
+                `;
+                targetContainer.appendChild(skeletonCard);
+            }
+        }
+
+        function showSliderSkeleton() {
+            const sliderContainer = document.getElementById('image-slider');
+            if (sliderContainer) {
+                sliderContainer.innerHTML = '<div class="skeleton skeleton-slider"></div>';
+            }
+        }
+
+        function showCartSkeleton(targetContainer, count = 3) {
+            targetContainer.innerHTML = '';
+            for (let i = 0; i < count; i++) {
+                const skeletonItem = document.createElement('div');
+                skeletonItem.className = 'skeleton-cart-item';
+                skeletonItem.innerHTML = `
+                    <div class="skeleton skeleton-cart-image"></div>
+                    <div class="skeleton-cart-info">
+                        <div class="skeleton skeleton-cart-name"></div>
+                        <div class="skeleton skeleton-cart-price"></div>
+                    </div>
+                `;
+                targetContainer.appendChild(skeletonItem);
+            }
+        }
+
+        // --- Enhanced Image Loading ---
+        function loadImageWithFallback(imgElement, src, fallbackSrc = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgdmlld0JveD0iMCAwIDE1MCAxNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxNTAiIGhlaWdodD0iMTUwIiBmaWxsPSIjRjVGNUY1Ii8+CjxwYXRoIGQ9Ik03NSA3NkM3Ny4wOTExIDc2IDc5IDc0LjA5MTEgNzkgNzJDNzkgNjkuOTA4OSA3Ny4wOTExIDY4IDc1IDY4QzcyLjkwODkgNjggNzEgNjkuOTA4OSA3MSA3MkM3MSA3NC4wOTExIDcyLjkwODkgNzYgNzUgNzZaIiBmaWxsPSIjQ0NDIi8+CjxwYXRoIGQ9Ik03NSA4MEM3OS40MTgzIDgwIDgzIDc2LjQxODMgODMgNzJIMjJDMTIgNzYuNDE4MyAxNS41ODE3IDgwIDIwIDgwWiIgZmlsbD0iI0NDQyIvPgo8L3N2Zz4K') {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                
+                // Add loading class
+                imgElement.classList.add('image-loading');
+                
+                img.onload = () => {
+                    imgElement.src = src;
+                    imgElement.classList.remove('image-loading');
+                    imgElement.classList.add('image-loaded');
+                    resolve();
+                };
+                
+                img.onerror = () => {
+                    imgElement.src = fallbackSrc;
+                    imgElement.classList.remove('image-loading');
+                    imgElement.classList.add('image-loaded');
+                    resolve(); // Still resolve to continue
+                };
+                
+                img.src = src;
+            });
+        }
+
+        // --- Product Grid ---
+        let productGridContainer;
+
+        function renderProductGrid(productsToRender, targetContainer = productGridContainer) {
+            targetContainer.innerHTML = ''; // Clear existing products
+            targetContainer.classList.add('product-grid'); // Add grid styling
+
+            if (Object.keys(productsToRender).length === 0) {
+                targetContainer.innerHTML = '<p style="text-align: center; color: var(--muted-color);">No products found in this category.</p>';
+                return;
+            }
+
+            for (const productId in productsToRender) {
+                const product = productsToRender[productId];
+                const productCard = document.createElement('div');
+                productCard.classList.add('product-card');
+                productCard.dataset.productId = productId;
+
+                productCard.innerHTML = `
+                    <div class="product-card-image-container">
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Crect width='100%25' height='100%25' fill='%23f0f0f0'/%3E%3C/svg%3E" alt="${product.name}" class="product-image">
+                    </div>
+                    <div class="product-card-info">
+                        <div class="product-card-name">${product.name}</div>
+                        <div class="product-card-price">₹${product.price.toFixed(2)}</div>
+                        <div class="product-card-actions">
+                            <button class="icon-btn wishlist-btn"><i class="far fa-heart"></i></button>
+                            <button class="add-to-cart-btn">Add to Cart</button>
+                        </div>
+                    </div>
+                `;
+
+                // Load image with enhanced loading
+                const imgElement = productCard.querySelector('.product-image');
+                loadImageWithFallback(imgElement, product.imageUrl || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgdmlld0JveD0iMCAwIDE1MCAxNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxNTAiIGhlaWdodD0iMTUwIiBmaWxsPSIjRjVGNUY1Ii8+CjxwYXRoIGQ9Ik03NSA3NkM3Ny4wOTExIDc2IDc5IDc0LjA5MTEgNzkgNzJDNzkgNjkuOTA4OSA3Ny4wOTExIDY4IDc1IDY4QzcyLjkwODkgNjggNzEgNjkuOTA4OSA3MSA3MkM3MSA3NC4wOTExIDcyLjkwODkgNzYgNzUgNzZaIiBmaWxsPSIjQ0NDIi8+CjxwYXRoIGQ9Ik03NSA4MEM3OS40MTgzIDgwIDgzIDc2LjQxODMgODMgNzJIMjJDMTIgNzYuNDE4MyAxNS41ODE3IDgwIDIwIDgwWiIgZmlsbD0iI0NDQyIvPgo8L3N2Zz4K');
+
+                productCard.addEventListener('click', (e) => {
+                    if (!e.target.closest('.wishlist-btn') && !e.target.closest('.add-to-cart-btn')) {
+                        openProductDetailModal(productId, product);
+                    }
+                });
+
+                productCard.querySelector('.wishlist-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    console.log("Wishlist button clicked for product:", productId); // Debug log
+                    addToWishlist(productId, product);
+                });
+
+                productCard.querySelector('.add-to-cart-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    console.log("Add to cart button clicked for product:", productId); // Debug log
+                    addToCart(productId, product);
+                });
+
+                targetContainer.appendChild(productCard);
+            }
+        }
+
+        // Modified filterProductsByCategory to render the grid
+        function filterProductsByCategory() {
+            const filteredProducts = {};
+            if (activeCategory === 'All') {
+                Object.assign(filteredProducts, allProducts);
+            } else {
+                for (const productId in allProducts) {
+                    if (allProducts[productId].category === activeCategory) {
+                        filteredProducts[productId] = allProducts[productId];
+                    }
+                }
+            }
+            renderProductGrid(filteredProducts);
+        }
+
+        // Show skeleton loading initially
+        if (productGridContainer) {
+            showProductSkeleton(productGridContainer, 8);
+        }
+
+        // Update onValue for productsRef to also call filterProductsByCategory initially
+        onValue(productsRef, (snapshot) => {
+            const data = snapshot.val();
+            allProducts = data || {};
+            const categories = new Set();
+            if (data) {
+                for (const key in data) {
+                    if (data[key].category) {
+                        categories.add(data[key].category);
+                    }
+                }
+            }
+            renderCategoryBubbles(Array.from(categories));
+            filterProductsByCategory(); // Initial and subsequent product rendering
+        });
+
+        // --- Product Detail Modal ---
+        let productDetailModal, productDetailImage, productDetailName, productDetailPrice, productDetailDescription, productDetailAddToCartBtn, productDetailOrderNowBtn;
+
+        let currentProductInDetailModal = null; // Store product for modal buttons
+
+        function openProductDetailModal(productId, product) {
+            currentProductInDetailModal = { productId, ...product };
+
+            // Enhanced image loading for product detail modal
+                            loadImageWithFallback(productDetailImage, product.imageUrl || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDQwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjVGNUY1Ii8+CjxwYXRoIGQ9Ik0yMDAgMTUwQzIwMi4wOTExIDE1MCAyMDQgMTQ4LjA5MTEgMjA0IDE0NkMyMDQgMTQzLjkwODkgMjAyLjA5MTEgMTQyIDIwMCAxNDJDMjA3LjkwODkgMTQyIDE5NiAxNDMuOTA4OSAxOTYgMTQ2QzE5NiAxNDguMDkxMSAxOTcuOTA4OSAxNTAgMjAwIDE1MFoiIGZpbGw9IiNDQ0MiLz4KPHBhdGggZD0iTTIwMCAxNjBDMjA0LjQxODMgMTYwIDIwOCAxNTYuNDE4MyAyMDggMTUySDE5MkMxOTIgMTU2LjQxODMgMTk1LjU4MTcgMTYwIDIwMCAxNjBaIiBmaWxsPSIjQ0NDIi8+Cjwvc3ZnPgo=');
+            productDetailImage.alt = product.name;
+            productDetailName.textContent = product.name;
+            productDetailPrice.textContent = `₹${product.price.toFixed(2)}`;
+            productDetailDescription.textContent = product.description;
+            productDetailModal.style.display = 'flex';
+        }
+
+        // Product detail modal event listeners moved to DOMContentLoaded
+
+        // --- Live Search ---
+        let searchInput, searchResultsGrid, searchIcon, searchNavIcon;
+        let lastTap = 0;
+        const DOUBLE_TAP_DELAY = 300; // milliseconds
+
+        // --- Admin Panel Redirect Feature (10 taps on Menu) ---
+        let menuNavItem;
+        let menuTapCount = 0;
+        let lastMenuTapTime = 0;
+        const TAP_RESET_DELAY = 500; // milliseconds to reset tap count
+        const REQUIRED_TAPS = 10;
+        const ADMIN_PASSWORD = 'Buxi';
+
+        function performSearch() {
+            if (!searchInput || !searchResultsGrid) return;
+            
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            
+            // If search is empty, show featured products
+            if (searchTerm === '') {
+                renderFeaturedProducts();
+                return;
+            }
+            
+            const searchFilteredProducts = {};
+            for (const productId in allProducts) {
+                const product = allProducts[productId];
+                if (product.name.toLowerCase().includes(searchTerm) ||
+                    product.description.toLowerCase().includes(searchTerm) ||
+                    product.category.toLowerCase().includes(searchTerm)) {
+                    searchFilteredProducts[productId] = product;
+                }
+            }
+            
+            // If no search results found, show featured products with search message
+            if (Object.keys(searchFilteredProducts).length === 0) {
+                renderNoSearchResults(searchTerm);
+            } else {
+                renderProductGrid(searchFilteredProducts, searchResultsGrid);
+            }
+        }
+
+        function renderFeaturedProducts() {
+            if (!searchResultsGrid) return;
+            
+            // Get a selection of featured products (first 6 products)
+            const featuredProducts = {};
+            const productIds = Object.keys(allProducts);
+            const maxFeatured = Math.min(6, productIds.length);
+            
+            for (let i = 0; i < maxFeatured; i++) {
+                const productId = productIds[i];
+                featuredProducts[productId] = allProducts[productId];
+            }
+            
+            searchResultsGrid.innerHTML = `
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h3 style="color: var(--text-color); margin-bottom: 8px;">✨ Featured Products</h3>
+                    <p style="color: var(--muted-color); font-size: 0.9rem;">Discover our popular items</p>
+                </div>
+            `;
+            
+            if (Object.keys(featuredProducts).length > 0) {
+                const gridContainer = document.createElement('div');
+                gridContainer.classList.add('product-grid');
+                searchResultsGrid.appendChild(gridContainer);
+                renderProductGrid(featuredProducts, gridContainer);
+            } else {
+                searchResultsGrid.innerHTML += '<p style="text-align: center; color: var(--muted-color);">No products available yet.</p>';
+            }
+        }
+
+        function renderNoSearchResults(searchTerm) {
+            if (!searchResultsGrid) return;
+            
+            // Get a few random products as suggestions
+            const suggestionProducts = {};
+            const productIds = Object.keys(allProducts);
+            const maxSuggestions = Math.min(4, productIds.length);
+            
+            // Get random products for suggestions
+            const shuffled = productIds.sort(() => 0.5 - Math.random());
+            for (let i = 0; i < maxSuggestions; i++) {
+                const productId = shuffled[i];
+                suggestionProducts[productId] = allProducts[productId];
+            }
+            
+            searchResultsGrid.innerHTML = `
+                <div style="text-align: center; margin-bottom: 25px;">
+                    <div style="font-size: 3rem; margin-bottom: 15px;">🔍</div>
+                    <h3 style="color: var(--text-color); margin-bottom: 8px;">No results found for "${searchTerm}"</h3>
+                    <p style="color: var(--muted-color); font-size: 0.9rem; margin-bottom: 20px;">Try a different search term or check out these suggestions:</p>
+                </div>
+            `;
+            
+            if (Object.keys(suggestionProducts).length > 0) {
+                const suggestionHeader = document.createElement('div');
+                suggestionHeader.innerHTML = `
+                    <h4 style="color: var(--text-color); margin-bottom: 15px; text-align: center;">
+                        💡 You might like these products:
+                    </h4>
+                `;
+                searchResultsGrid.appendChild(suggestionHeader);
+                
+                const gridContainer = document.createElement('div');
+                gridContainer.classList.add('product-grid');
+                searchResultsGrid.appendChild(gridContainer);
+                renderProductGrid(suggestionProducts, gridContainer);
+            }
+        }
+
+        // --- Cart Functionality ---
+        let cartBadge, cartItemsContainer, cartSubtotalSpan, wishlistBadge, wishlistItemsContainer;
+
+        // Theme functionality
+        function initializeTheme() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const themeIcon = document.getElementById('theme-icon');
+            
+            // Load saved theme from localStorage
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+            
+            // Add click event listener
+            themeToggle.addEventListener('click', () => {
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+                
+                document.documentElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+                updateThemeIcon(newTheme);
+            });
+        }
+
+        function updateThemeIcon(theme) {
+            const themeIcon = document.getElementById('theme-icon');
+            if (theme === 'dark') {
+                themeIcon.className = 'fas fa-sun';
+                themeIcon.title = 'Switch to Light Mode';
+            } else {
+                themeIcon.className = 'fas fa-moon';
+                themeIcon.title = 'Switch to Dark Mode';
+            }
+        }
+
+        // Initialize all DOM elements and functionality when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize theme functionality
+            initializeTheme();
+            
+            // Get DOM elements
+            cartBadge = document.getElementById('cart-badge');
+            cartItemsContainer = document.getElementById('cart-items');
+            cartSubtotalSpan = document.getElementById('cart-subtotal');
+            wishlistBadge = document.getElementById('wishlist-badge');
+            wishlistItemsContainer = document.getElementById('wishlist-items');
+            
+            // Get search elements
+            searchInput = document.getElementById('search-input');
+            searchResultsGrid = document.getElementById('search-results-grid');
+            searchIcon = document.getElementById('search-icon');
+            searchNavIcon = document.getElementById('search-nav-icon');
+            
+            // Get menu elements
+            menuNavItem = document.getElementById('menu-nav-item');
+            
+            // Get auth elements
+            authForm = document.getElementById('auth-form');
+            authEmailInput = document.getElementById('auth-email');
+            authPasswordInput = document.getElementById('auth-password');
+            authError = document.getElementById('auth-error');
+            authSubmitBtn = document.getElementById('auth-submit-btn');
+            toggleAuthModeBtn = document.getElementById('toggle-auth-mode');
+            authNameInput = document.getElementById('auth-name');
+            authGenderSelect = document.getElementById('auth-gender');
+            authAgeInput = document.getElementById('auth-age');
+            
+            // Get profile elements
+            loginStatusIndicator = document.getElementById('login-status-indicator');
+            menuLoginLink = document.getElementById('menu-login-link');
+            menuProfileLink = document.getElementById('menu-profile-link');
+            menuOrdersLink = document.getElementById('menu-orders-link');
+            menuLogoutLink = document.getElementById('menu-logout-link');
+            profileEmailSpan = document.getElementById('profile-email');
+            profilePicDisplay = document.getElementById('profile-pic-display');
+            editProfileBtn = document.getElementById('edit-profile-btn');
+            editProfileModal = document.getElementById('edit-profile-modal');
+            editProfileForm = document.getElementById('edit-profile-form');
+            editProfileNameInput = document.getElementById('edit-profile-name');
+            editProfilePicUrlInput = document.getElementById('edit-profile-pic-url');
+            profileUserIdSpan = document.getElementById('profile-user-id');
+            
+            // Get slider elements
+            imageSlider = document.getElementById('image-slider');
+            
+            // Get category and product elements
+            categoryBubblesContainer = document.querySelector('#category-bubbles .category-bubbles-container');
+            productGridContainer = document.getElementById('product-grid');
+            
+            // Get header profile elements
+            const headerProfileIcon = document.getElementById('header-profile-icon');
+            const profileDropdown = document.getElementById('profile-dropdown');
+            const headerProfileName = document.getElementById('header-profile-name');
+            const headerProfileEmail = document.getElementById('header-profile-email');
+            const headerLoginBtn = document.getElementById('header-login-btn');
+            const headerProfileBtn = document.getElementById('header-profile-btn');
+            const headerOrdersBtn = document.getElementById('header-orders-btn');
+            const headerLogoutBtn = document.getElementById('header-logout-btn');
+            
+            // Get logo element
+            const logoElement = document.querySelector('.logo');
+            
+            // Get product detail modal elements
+            productDetailModal = document.getElementById('product-detail-modal');
+            if (productDetailModal) {
+                productDetailImage = document.getElementById('product-detail-image');
+                productDetailName = document.getElementById('product-detail-name');
+                productDetailPrice = document.getElementById('product-detail-price');
+                productDetailDescription = document.getElementById('product-detail-description');
+                productDetailAddToCartBtn = productDetailModal.querySelector('.add-to-cart-btn');
+                productDetailOrderNowBtn = productDetailModal.querySelector('.order-now-btn');
+                
+                // Set up product detail modal event listeners
+                if (productDetailAddToCartBtn) {
+                    productDetailAddToCartBtn.addEventListener('click', () => {
+                        console.log("Modal add to cart button clicked"); // Debug log
+                        if (currentProductInDetailModal) {
+                            addToCart(currentProductInDetailModal.productId, currentProductInDetailModal);
+                            productDetailModal.style.display = 'none'; // Close modal after adding to cart
+                        } else {
+                            console.log("No product in modal!"); // Debug log
+                        }
+                    });
+                }
+                
+                if (productDetailOrderNowBtn) {
+                    productDetailOrderNowBtn.addEventListener('click', () => {
+                        console.log("Modal order now button clicked"); // Debug log
+                        if (currentProductInDetailModal) {
+                            // Check if user is logged in
+                            const user = auth.currentUser;
+                            if (!user) {
+                                // Guest user - show login prompt
+                                // Please log in to place an order - no alert needed
+                                productDetailModal.style.display = 'none';
+                                document.getElementById('auth-modal').style.display = 'flex';
+                                return;
+                            }
+                            
+                            // Add to cart first, then show shipping modal
+                            addToCart(currentProductInDetailModal.productId, currentProductInDetailModal);
+                            productDetailModal.style.display = 'none'; // Close product modal
+                            // Show shipping modal for immediate order
+                            document.getElementById('shipping-modal').style.display = 'flex';
+                        } else {
+                            console.log("No product in modal!"); // Debug log
+                        }
+                    });
+                }
+            }
+
+            // Initialize cart and wishlist display
+            if (cartItemsContainer && cartSubtotalSpan) {
+                renderCart();
+                renderWishlist();
+            }
+
+            // Set up search functionality
+            if (searchInput) {
+                searchInput.addEventListener('input', performSearch);
+                // Show featured products initially when search page loads
+                if (window.location.hash === '#search') {
+                    renderFeaturedProducts();
+                }
+            }
+            
+            if (searchIcon) {
+                searchIcon.addEventListener('click', () => {
+                    window.location.hash = '#search';
+                    performSearch();
+                });
+            }
+            
+            if (searchNavIcon) {
+                searchNavIcon.addEventListener('touchend', (e) => {
+                    const currentTime = new Date().getTime();
+                    const tapLength = currentTime - lastTap;
+
+                    if (tapLength < DOUBLE_TAP_DELAY && tapLength > 0) {
+                        // Double tap detected
+                        e.preventDefault(); // Prevent default double-tap behavior (e.g., zoom)
+                        if (window.innerWidth <= 768) { // Only for mobile devices
+                            window.location.hash = '#search'; // Go to search page
+                            // Use a small timeout to ensure the search input is visible before focusing
+                            setTimeout(() => {
+                                if (searchInput) searchInput.focus(); // Bring up the keyboard
+                            }, 100);
+                        }
+                    }
+                    lastTap = currentTime;
+                });
+            }
+            
+            if (menuNavItem) {
+                menuNavItem.addEventListener('touchend', (e) => {
+                    const currentTime = new Date().getTime();
+                    console.log("Menu button touchend detected.");
+                    console.log(`Current Time: ${currentTime}`);
+                    console.log(`Last Menu Tap Time: ${lastMenuTapTime}`);
+                    console.log(`Time since last tap: ${currentTime - lastMenuTapTime}ms`);
+
+                    if (currentTime - lastMenuTapTime > TAP_RESET_DELAY) {
+                        menuTapCount = 0; // Reset if taps are too slow
+                        console.log("Tap count reset due to delay.");
+                    }
+
+                    menuTapCount++;
+                    lastMenuTapTime = currentTime;
+                    console.log(`Menu Tap Count: ${menuTapCount}`);
+
+                    if (menuTapCount >= REQUIRED_TAPS) {
+                        console.log("Required taps met.");
+                        e.preventDefault(); // Prevent default menu navigation
+                        const password = prompt('Enter password to access admin panel:');
+                        if (password === ADMIN_PASSWORD) {
+                            window.location.href = 'admin.html';
+                        } else if (password !== null) { // If user didn't cancel
+                            // Incorrect password - no alert needed
+                        }
+                        menuTapCount = 0; // Reset tap count after attempt
+                    }
+                });
+            }
+
+            // Set up Firebase listeners for cart and wishlist
+            const user = auth.currentUser;
+            if (user) {
+                const userCartRef = ref(database, `users/${user.uid}/cart`);
+                onValue(userCartRef, (snapshot) => {
+                    renderCart(); // Re-render cart whenever it changes
+                });
+
+                const userWishlistRef = ref(database, `users/${user.uid}/wishlist`);
+                onValue(userWishlistRef, (snapshot) => {
+                    renderWishlist();
+                });
+            }
+
+            // Set up auth functionality
+            if (toggleAuthModeBtn) {
+                toggleAuthModeBtn.addEventListener('click', () => {
+                    isLoginMode = !isLoginMode;
+                    if (authSubmitBtn) authSubmitBtn.textContent = isLoginMode ? 'Login' : 'Register';
+                    if (toggleAuthModeBtn) toggleAuthModeBtn.textContent = isLoginMode ? 'Switch to Register' : 'Switch to Login';
+
+                    // Toggle visibility of new fields
+                    if (authNameInput) authNameInput.style.display = isLoginMode ? 'none' : 'block';
+                    if (authGenderSelect) authGenderSelect.style.display = isLoginMode ? 'none' : 'block';
+                    if (authAgeInput) authAgeInput.style.display = isLoginMode ? 'none' : 'block';
+
+                    hideAuthError();
+                });
+            }
+
+            if (authForm) {
+                authForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    hideAuthError();
+
+                    const email = authEmailInput.value;
+                    const password = authPasswordInput.value;
+                    const name = authNameInput.value; // New
+                    const gender = authGenderSelect.value; // New
+                    const age = parseInt(authAgeInput.value); // New
+
+                    if (isLoginMode) {
+                        try {
+                            await signInWithEmailAndPassword(auth, email, password);
+                            document.getElementById('auth-modal').style.display = 'none';
+                        } catch (error) {
+                            showAuthError(error.message);
+                        }
+                    } else {
+                        // Registration mode
+                        if (!name || !gender || isNaN(age) || age <= 0) {
+                            showAuthError('Please fill in all registration fields (Name, Gender, Age).');
+                            return;
+                        }
+
+                        try {
+                            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                            const user = userCredential.user;
+
+                            // Update Firebase Auth profile (displayName)
+                            await updateProfile(user, {
+                                displayName: name,
+                            });
+
+                            // Save additional user data to Realtime Database
+                            const userProfileRef = ref(database, `users/${user.uid}/profile`);
+                            await set(userProfileRef, {
+                                email: user.email,
+                                name: name,
+                                gender: gender,
+                                age: age,
+                                registrationDate: Date.now()
+                            });
+
+                            document.getElementById('auth-modal').style.display = 'none';
+                        } catch (error) {
+                            showAuthError(error.message);
+                        }
+                    }
+                });
+            }
+
+            // Open auth modal when "Login" in menu is clicked
+            if (menuLoginLink) {
+                menuLoginLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    document.getElementById('auth-modal').style.display = 'flex';
+                });
+            }
+            
+            // Set up logout functionality
+            if (menuLogoutLink) {
+                menuLogoutLink.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    try {
+                        await signOut(auth);
+                        // document.getElementById('menu-modal').style.display = 'none'; // Removed as menu is now a section
+                        window.location.hash = '#home'; // Redirect to home after logout
+                    } catch (error) {
+                        console.error("Error logging out:", error);
+                    }
+                });
+            }
+            
+            // Get contact form elements
+            contactForm = document.getElementById('contact-form');
+            contactNameInput = document.getElementById('contact-name');
+            contactEmailInput = document.getElementById('contact-email');
+            contactMessageTextarea = document.getElementById('contact-message');
+            contactFormMessage = document.getElementById('contact-form-message');
+            
+            // Get checkout elements
+            proceedToCheckoutBtn = document.getElementById('proceed-to-checkout-btn');
+            shippingModal = document.getElementById('shipping-modal');
+            shippingForm = document.getElementById('shipping-form');
+            shippingNameInput = document.getElementById('shipping-name');
+            shippingMobileInput = document.getElementById('shipping-mobile');
+            shippingAddressTextarea = document.getElementById('shipping-address');
+            orderListContainer = document.getElementById('order-list');
+            
+            // Set up contact form
+            if (contactForm) {
+                contactForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    if (contactFormMessage) contactFormMessage.style.display = 'none';
+
+                    const name = contactNameInput.value;
+                    const email = contactEmailInput.value;
+                    const message = contactMessageTextarea.value;
+
+                    try {
+                        const messagesRef = ref(database, 'messages');
+                        const newMessageRef = push(messagesRef);
+                        await set(newMessageRef, {
+                            name: name,
+                            email: email,
+                            message: message,
+                            date: Date.now()
+                        });
+
+                        if (contactFormMessage) {
+                            contactFormMessage.textContent = 'Your message has been sent successfully!';
+                            contactFormMessage.style.color = 'green';
+                            contactFormMessage.style.display = 'block';
+                        }
+                        contactForm.reset();
+                    } catch (error) {
+                        if (contactFormMessage) {
+                            contactFormMessage.textContent = `Error sending message: ${error.message}`;
+                            contactFormMessage.style.color = 'var(--primary-red)';
+                            contactFormMessage.style.display = 'block';
+                        }
+                        console.error("Error sending message:", error);
+                    }
+                });
+            }
+            
+            // Set up checkout functionality
+            if (proceedToCheckoutBtn) {
+                proceedToCheckoutBtn.addEventListener('click', () => {
+                    const user = auth.currentUser;
+                    if (!user) {
+                        // Please log in to proceed to checkout - no alert needed
+                        document.getElementById('auth-modal').style.display = 'flex';
+                        return;
+                    }
+                    // Check if cart is empty before opening shipping modal
+                    const userCartRef = ref(database, `users/${user.uid}/cart`);
+                    onValue(userCartRef, (snapshot) => {
+                        const cart = snapshot.val();
+                        if (!cart || Object.keys(cart).length === 0) {
+                            // Your cart is empty - no alert needed
+                        } else {
+                            if (shippingModal) shippingModal.style.display = 'flex';
+                        }
+                        // Listener automatically removed with onlyOnce: true
+                    }, { onlyOnce: true });
+                });
+            }
+            
+            if (shippingForm) {
+                shippingForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const user = auth.currentUser;
+                    if (!user) return; // Should not happen due to prior check
+
+                    const shippingName = shippingNameInput.value;
+                    const shippingMobile = shippingMobileInput.value;
+                    const shippingAddress = shippingAddressTextarea.value;
+
+                    const userCartRef = ref(database, `users/${user.uid}/cart`);
+                    onValue(userCartRef, async (snapshot) => {
+                        const cartItems = snapshot.val() || {};
+                        let totalAmount = 0;
+                        const itemsArray = [];
+
+                        for (const productId in cartItems) {
+                            const item = cartItems[productId];
+                            totalAmount += item.quantity * item.price;
+                            itemsArray.push({ productId, name: item.name, price: item.price, qty: item.quantity, imageUrl: item.imageUrl });
+                        }
+
+                        if (itemsArray.length === 0) {
+                            // Your cart is empty - no alert needed
+                            if (shippingModal) shippingModal.style.display = 'none';
+                            return;
+                        }
+
+                        const ordersRef = ref(database, `orders/${user.uid}`);
+                        const newOrderRef = push(ordersRef); // Generate unique order ID
+                        const orderId = newOrderRef.key;
+
+                        const orderData = {
+                            orderId: orderId,
+                            userId: user.uid,
+                            items: itemsArray,
+                            totalAmount: totalAmount,
+                            shippingName: shippingName,
+                            shippingMobile: `+91${shippingMobile}`,
+                            shippingAddress: shippingAddress,
+                            status: 'Pending',
+                            date: Date.now()
+                        };
+
+                        console.log('Order data being saved:', orderData); // Debug log
+
+                        try {
+                            await set(newOrderRef, orderData);
+                            
+                            // Clear the user's cart after successful order
+                            const userCartRef = ref(database, `users/${user.uid}/cart`);
+                            await set(userCartRef, {});
+                            
+                            // Send notification to all admin tokens
+                            await sendOrderNotification(orderData);
+                            
+                            if (shippingModal) shippingModal.style.display = 'none';
+                            window.location.hash = '#orders';
+                        } catch (error) {
+                            console.error("Error placing order:", error);
+                            // Error placing order - no alert needed
+                        }
+                        
+                        // Listener automatically removed with onlyOnce: true
+                    }, { onlyOnce: true });
+                });
+            }
+            
+            // Set up edit profile functionality
+            if (editProfileBtn) {
+                editProfileBtn.addEventListener('click', () => {
+                    const user = auth.currentUser;
+                    if (!user) {
+                        // Please log in to edit your profile - no alert needed
+                        document.getElementById('auth-modal').style.display = 'flex';
+                        return;
+                    }
+                    if (editProfileNameInput) editProfileNameInput.value = user.displayName || '';
+                    if (editProfilePicUrlInput) editProfilePicUrlInput.style.display = 'none'; // Hide this input
+                    if (editProfileModal) editProfileModal.style.display = 'flex';
+                });
+            }
+            
+            if (editProfileForm) {
+                editProfileForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const user = auth.currentUser;
+                    if (!user) return; // Should not happen due to prior check
+
+                    const newName = editProfileNameInput.value;
+                    // const newPhotoUrl = editProfilePicUrlInput.value; // No longer used as image is fixed
+
+                    try {
+                        await updateProfile(user, {
+                            // displayName: newName,
+                            // photoURL: newPhotoUrl || null // No longer updated
+                        });
+                        console.log('Profile updated successfully!');
+                        if (editProfileModal) editProfileModal.style.display = 'none';
+                        // Re-render profile section to show updated name
+                        onAuthStateChanged(auth, (user) => {
+                            if (user) {
+                                if (profilePicDisplay) profilePicDisplay.src = 'https://i.ibb.co/V0z4HyF2/1bcaf73402827ce2445bfc904fd01f4b.jpg'; // Ensure it's always the fixed image
+                            }
+                        });
+                    } catch (error) {
+                        // Error updating profile - no alert needed
+                        console.error("Error updating profile:", error);
+                    }
+                });
+            }
+            
+            // Set up header profile dropdown functionality
+            if (headerProfileIcon && profileDropdown) {
+                // Toggle dropdown on profile icon click
+                headerProfileIcon.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    profileDropdown.classList.toggle('show');
+                });
+                
+                // Close dropdown when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!headerProfileIcon.contains(e.target) && !profileDropdown.contains(e.target)) {
+                        profileDropdown.classList.remove('show');
+                    }
+                });
+                
+                // Header login button
+                if (headerLoginBtn) {
+                    headerLoginBtn.addEventListener('click', () => {
+                        profileDropdown.classList.remove('show');
+                        document.getElementById('auth-modal').style.display = 'flex';
+                    });
+                }
+                
+                // Header profile button
+                if (headerProfileBtn) {
+                    headerProfileBtn.addEventListener('click', () => {
+                        profileDropdown.classList.remove('show');
+                        if (editProfileModal) editProfileModal.style.display = 'flex';
+                    });
+                }
+                
+                // Header orders button
+                if (headerOrdersBtn) {
+                    headerOrdersBtn.addEventListener('click', () => {
+                        profileDropdown.classList.remove('show');
+                        window.location.hash = '#orders';
+                    });
+                }
+                
+                // Header logout button
+                if (headerLogoutBtn) {
+                    headerLogoutBtn.addEventListener('click', async () => {
+                        profileDropdown.classList.remove('show');
+                        try {
+                            await signOut(auth);
+                            window.location.hash = '#home';
+                        } catch (error) {
+                            console.error("Error logging out:", error);
+                        }
+                    });
+                }
+            }
+            
+            // Set up logo click to go home
+            if (logoElement) {
+                logoElement.addEventListener('click', () => {
+                    window.location.hash = '#home';
+                });
+            }
+
+            // Set up cancel order functionality
+            document.addEventListener('click', (e) => {
+                if (e.target.classList.contains('cancel-order-btn')) {
+                    const orderId = e.target.dataset.orderId;
+                    const userId = e.target.dataset.userId;
+                    cancelOrder(orderId, userId);
+                }
+            });
+        });
+
+        function updateCartBadge(count) {
+            if (!cartBadge) {
+                console.log("Cart badge not ready yet!"); // Debug log
+                return;
+            }
+            
+            if (count > 0) {
+                cartBadge.textContent = count;
+                cartBadge.style.display = 'block';
+            } else {
+                cartBadge.style.display = 'none';
+            }
+        }
+
+        function getLocalCart() {
+            return JSON.parse(localStorage.getItem('guestCart')) || {};
+        }
+
+        function saveLocalCart(cart) {
+            localStorage.setItem('guestCart', JSON.stringify(cart));
+            // Only render cart if DOM elements are ready
+            if (cartItemsContainer && cartSubtotalSpan) {
+                renderCart(); // Re-render cart after local storage update
+            }
+        }
+
+        async function addToCart(productId, product, quantity = 1) {
+            console.log("addToCart called:", productId, product, quantity); // Debug log
+            const user = auth.currentUser;
+
+            if (!user) {
+                console.log("Guest user, adding to local cart"); // Debug log
+                // Guest user: add to local storage
+                let guestCart = getLocalCart();
+                if (guestCart[productId]) {
+                    guestCart[productId].quantity += quantity;
+                } else {
+                    guestCart[productId] = { ...product, quantity };
+                }
+                saveLocalCart(guestCart);
+                updateCartBadge(Object.keys(guestCart).length);
+                return;
+            }
+
+            // Logged-in user: add to Firebase
+            console.log("Logged-in user, adding to Firebase"); // Debug log
+            const userCartRef = ref(database, `users/${user.uid}/cart/${productId}`);
+            try {
+                // Get current cart item
+                const snapshot = await new Promise((resolve, reject) => {
+                    onValue(userCartRef, resolve, { onlyOnce: true });
+                });
+                const existingCartItem = snapshot.val();
+                const newQuantity = existingCartItem ? existingCartItem.quantity + quantity : quantity;
+                await set(userCartRef, { ...product, quantity: newQuantity });
+                console.log("Item added to Firebase cart"); // Debug log
+            } catch (error) {
+                console.error("Error adding to cart:", error);
+                // Error adding item to cart - no alert needed
+            }
+        }
+
+                function renderCart() {
+            console.log("renderCart called"); // Debug log
+            if (!cartItemsContainer || !cartSubtotalSpan) {
+                console.log("Cart DOM elements not ready yet!"); // Debug log
+                return;
+            }
+            
+            // Show skeleton while loading
+            showCartSkeleton(cartItemsContainer, 3);
+            
+            let cart = {};
+            let totalCartItems = 0;
+            let subtotal = 0;
+
+            const user = auth.currentUser;
+            console.log("User status:", user ? "logged in" : "guest"); // Debug log
+
+            if (user) {
+                const userCartRef = ref(database, `users/${user.uid}/cart`);
+                onValue(userCartRef, (snapshot) => {
+                    cart = snapshot.val() || {};
+                    console.log("Firebase cart data:", cart); // Debug log
+                    updateCartUI(cart);
+                });
+            } else {
+                cart = getLocalCart();
+                console.log("Local cart data:", cart); // Debug log
+                updateCartUI(cart);
+            }
+
+            function updateCartUI(currentCart) {
+                console.log("updateCartUI called with:", currentCart); // Debug log
+                cartItemsContainer.innerHTML = ''; // Clear for re-render
+                totalCartItems = 0;
+                subtotal = 0;
+
+                if (Object.keys(currentCart).length === 0) {
+                    console.log("Cart is empty, showing empty message"); // Debug log
+                    cartItemsContainer.innerHTML = '<p style="text-align: center; color: var(--muted-color);">Your cart is empty.</p>';
+                    updateCartBadge(0);
+                    cartSubtotalSpan.textContent = '₹0.00';
+                    return;
+                }
+
+                console.log("Cart has items, rendering:", Object.keys(currentCart).length); // Debug log
+
+                for (const productId in currentCart) {
+                    const item = currentCart[productId];
+                    totalCartItems += item.quantity;
+                    subtotal += item.quantity * item.price;
+
+                    const cartItemDiv = document.createElement('div');
+                    cartItemDiv.classList.add('card');
+                    cartItemDiv.style.display = 'flex';
+                    cartItemDiv.style.alignItems = 'center';
+                    cartItemDiv.style.marginBottom = '10px';
+
+                    cartItemDiv.innerHTML = `
+                        <img src="${item.imageUrl || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjUwIiBoZWlnaHQ9IjUwIiBmaWxsPSIjRjVGNUY1Ii8+CjxwYXRoIGQ9Ik0yNSAyNkMyNy4wOTExIDI2IDI5IDI0LjA5MTEgMjkgMjJDMjkgMTkuOTA4OSAyNy4wOTExIDE4IDI1IDE4QzIyLjkwODkgMTggMjEgMTkuOTA4OSAyMSAyMkMyMSAyNC4wOTExIDIyLjkwODkgMjYgMjUgMjZaIiBmaWxsPSIjQ0NDIi8+CjxwYXRoIGQ9Ik0yNSAzMEMyOS40MTgzIDMwIDMzIDI2LjQxODMgMzMgMjJIMTdDMTcgMjYuNDE4MyAyMC41ODE3IDMwIDI1IDMwWiIgZmlsbD0iI0NDQyIvPgo8L3N2Zz4K'}" alt="${item.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; margin-right: 15px;">
+                        <div style="flex-grow: 1;">
+                            <div style="font-weight: 500;">${item.name}</div>
+                            <div style="color: var(--muted-color); font-size: 0.9rem;">₹${item.price.toFixed(2)} each</div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <button class="icon-btn decrease-qty" data-product-id="${productId}"><i class="fas fa-minus"></i></button>
+                            <span>${item.quantity}</span>
+                            <button class="icon-btn increase-qty" data-product-id="${productId}"><i class="fas fa-plus"></i></button>
+                            <div style="font-weight: 600; min-width: 60px; text-align: right;">₹${(item.quantity * item.price).toFixed(2)}</div>
+                        </div>
+                    `;
+                    cartItemsContainer.appendChild(cartItemDiv);
+                }
+
+                updateCartBadge(totalCartItems);
+                cartSubtotalSpan.textContent = `₹${subtotal.toFixed(2)}`;
+
+                // Add event listeners for quantity controls
+                cartItemsContainer.querySelectorAll('.increase-qty').forEach(button => {
+                    button.addEventListener('click', (e) => updateCartItemQuantity(e.currentTarget.dataset.productId, 1));
+                });
+
+                cartItemsContainer.querySelectorAll('.decrease-qty').forEach(button => {
+                    button.addEventListener('click', (e) => updateCartItemQuantity(e.currentTarget.dataset.productId, -1));
+                });
+            }
+        }
+
+        async function updateCartItemQuantity(productId, change) {
+            const user = auth.currentUser;
+
+            if (!user) {
+                // Guest cart
+                let guestCart = getLocalCart();
+                if (guestCart[productId]) {
+                    guestCart[productId].quantity += change;
+                    if (guestCart[productId].quantity <= 0) {
+                        delete guestCart[productId];
+                    }
+                }
+                saveLocalCart(guestCart);
+                return;
+            }
+
+            // Logged-in cart
+            const userCartItemRef = ref(database, `users/${user.uid}/cart/${productId}`);
+            onValue(userCartItemRef, async (snapshot) => {
+                const existingItem = snapshot.val();
+                if (existingItem) {
+                    const newQuantity = existingItem.quantity + change;
+                    if (newQuantity <= 0) {
+                        await remove(userCartItemRef);
+                    } else {
+                        await update(userCartItemRef, { quantity: newQuantity });
+                    }
+                }
+                // Listener automatically removed with onlyOnce: true
+            }, { onlyOnce: true });
+        }
+
+        // --- Wishlist Functionality ---
+        function updateWishlistBadge(count) {
+            if (!wishlistBadge) {
+                console.log("Wishlist badge not ready yet!"); // Debug log
+                return;
+            }
+            
+            if (count > 0) {
+                wishlistBadge.textContent = count;
+                wishlistBadge.style.display = 'block';
+            } else {
+                wishlistBadge.style.display = 'none';
+            }
+        }
+
+        function getLocalWishlist() {
+            return JSON.parse(localStorage.getItem('guestWishlist')) || {};
+        }
+
+        function saveLocalWishlist(wishlist) {
+            localStorage.setItem('guestWishlist', JSON.stringify(wishlist));
+            // Only render wishlist if DOM elements are ready
+            if (wishlistItemsContainer) {
+                renderWishlist();
+            }
+        }
+
+        async function cancelOrder(orderId, userId) {
+                    // Order cancellation confirmed - no confirm dialog needed
+
+            try {
+                const orderRef = ref(database, `orders/${userId}/${orderId}`);
+                await update(orderRef, { status: 'Cancelled' });
+                console.log(`Order ${orderId} cancelled successfully`);
+                // Order cancelled successfully - no alert needed
+            } catch (error) {
+                console.error('Error cancelling order:', error);
+                // Error cancelling order - no alert needed
+            }
+        }
+
+        async function addToWishlist(productId, product) {
+            console.log("addToWishlist called:", productId, product); // Debug log
+            const user = auth.currentUser;
+
+            if (!user) {
+                console.log("Guest user, adding to local wishlist"); // Debug log
+                let guestWishlist = getLocalWishlist();
+                if (!guestWishlist[productId]) {
+                    guestWishlist[productId] = { ...product };
+                    saveLocalWishlist(guestWishlist);
+                    updateWishlistBadge(Object.keys(guestWishlist).length);
+                } else {
+                    console.log("Item already in wishlist"); // Debug log
+                }
+                return;
+            }
+
+            console.log("Logged-in user, adding to Firebase wishlist"); // Debug log
+            const userWishlistRef = ref(database, `users/${user.uid}/wishlist/${productId}`);
+            try {
+                const snapshot = await new Promise((resolve, reject) => {
+                    onValue(userWishlistRef, resolve, { onlyOnce: true });
+                });
+                if (!snapshot.exists()) {
+                    await set(userWishlistRef, { ...product });
+                    console.log("Item added to Firebase wishlist"); // Debug log
+                } else {
+                    console.log("Item is already in wishlist"); // Debug log
+                }
+            } catch (error) {
+                console.error("Error adding to wishlist:", error);
+                // Error adding item to wishlist - no alert needed
+            }
+        }
+
+        async function removeFromWishlist(productId) {
+            const user = auth.currentUser;
+
+            if (!user) {
+                let guestWishlist = getLocalWishlist();
+                delete guestWishlist[productId];
+                saveLocalWishlist(guestWishlist);
+                return;
+            }
+
+            const userWishlistRef = ref(database, `users/${user.uid}/wishlist/${productId}`);
+            await remove(userWishlistRef);
+        }
+
+        async function moveWishlistItemToCart(productId, product) {
+            const user = auth.currentUser;
+
+            if (!user) {
+                // For guest users, add to local cart and remove from local wishlist
+                await addToCart(productId, product);
+                await removeFromWishlist(productId);
+                return;
+            }
+
+            // For logged-in users, add to Firebase cart and remove from Firebase wishlist
+            await addToCart(productId, product); // addToCart already handles logged-in logic
+            await removeFromWishlist(productId);
+        }
+
+        function renderWishlist() {
+            if (!wishlistItemsContainer) {
+                console.log("Wishlist DOM elements not ready yet!"); // Debug log
+                return;
+            }
+            
+            wishlistItemsContainer.innerHTML = '';
+            let wishlist = {};
+            let totalWishlistItems = 0;
+            const user = auth.currentUser;
+
+            if (user) {
+                const userWishlistRef = ref(database, `users/${user.uid}/wishlist`);
+                onValue(userWishlistRef, (snapshot) => {
+                    wishlist = snapshot.val() || {};
+                    updateWishlistUI(wishlist);
+                });
+            } else {
+                wishlist = getLocalWishlist();
+                updateWishlistUI(wishlist);
+            }
+
+            function updateWishlistUI(currentWishlist) {
+                wishlistItemsContainer.innerHTML = '';
+                totalWishlistItems = 0;
+
+                if (Object.keys(currentWishlist).length === 0) {
+                    wishlistItemsContainer.innerHTML = '<p style="text-align: center; color: var(--muted-color);">Your wishlist is empty.</p>';
+                    updateWishlistBadge(0);
+                    return;
+                }
+
+                for (const productId in currentWishlist) {
+                    const item = currentWishlist[productId];
+                    totalWishlistItems++;
+
+                    const wishlistItemDiv = document.createElement('div');
+                    wishlistItemDiv.classList.add('card');
+                    wishlistItemDiv.style.display = 'flex';
+                    wishlistItemDiv.style.alignItems = 'center';
+                    wishlistItemDiv.style.marginBottom = '10px';
+
+                    wishlistItemDiv.innerHTML = `
+                        <img src="${item.imageUrl || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjUwIiBoZWlnaHQ9IjUwIiBmaWxsPSIjRjVGNUY1Ii8+CjxwYXRoIGQ9Ik0yNSAyNkMyNy4wOTExIDI2IDI5IDI0LjA5MTEgMjkgMjJDMjkgMTkuOTA4OSAyNy4wOTExIDE4IDI1IDE4QzIyLjkwODkgMTggMjEgMTkuOTA4OSAyMSAyMkMyMSAyNC4wOTExIDIyLjkwODkgMjYgMjUgMjZaIiBmaWxsPSIjQ0NDIi8+CjxwYXRoIGQ9Ik0yNSAzMEMyOS40MTgzIDMwIDMzIDI2LjQxODMgMzMgMjJIMTdDMTcgMjYuNDE4MyAyMC41ODE3IDMwIDI1IDMwWiIgZmlsbD0iI0NDQyIvPgo8L3N2Zz4K'}" alt="${item.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; margin-right: 15px;">
+                        <div style="flex-grow: 1;">
+                            <div style="font-weight: 500;">${item.name}</div>
+                            <div style="color: var(--muted-color); font-size: 0.9rem;">₹${item.price.toFixed(2)}</div>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="add-to-cart-btn" data-product-id="${productId}">Move to Cart</button>
+                            <button class="icon-btn remove-from-wishlist" data-product-id="${productId}"><i class="fas fa-times"></i></button>
+                        </div>
+                    `;
+                    wishlistItemsContainer.appendChild(wishlistItemDiv);
+                }
+
+                updateWishlistBadge(totalWishlistItems);
+
+                // Add event listeners for buttons
+                wishlistItemsContainer.querySelectorAll('.remove-from-wishlist').forEach(button => {
+                    button.addEventListener('click', (e) => removeFromWishlist(e.currentTarget.dataset.productId));
+                });
+
+                wishlistItemsContainer.querySelectorAll('.add-to-cart-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const productId = e.currentTarget.dataset.productId;
+                        const product = currentWishlist[productId];
+                        if (product) {
+                            moveWishlistItemToCart(productId, product);
+                        }
+                    });
+                });
+            }
+        }
+
+        // Initial renders on load
+        window.addEventListener('load', () => {
+            renderOrders(); // Initial render for orders
+            startOrderStatusListener(); // Start listening for real-time updates
+        });
+
+        window.addEventListener('hashchange', () => {
+            if (window.location.hash === '#cart') {
+                renderCart();
+            } else if (window.location.hash === '#wishlist') {
+                renderWishlist();
+            } else if (window.location.hash === '#orders') {
+                renderOrders();
+            } else if (window.location.hash === '#search') {
+                // Show featured products when navigating to search page
+                if (searchInput && searchInput.value.trim() === '') {
+                    renderFeaturedProducts();
+                }
+            } else if (window.location.hash === '#contact') {
+                // Any specific initialization for contact page if needed
+            }
+        });
+
+        // --- Contact Form ---
+        let contactForm, contactNameInput, contactEmailInput, contactMessageTextarea, contactFormMessage;
+
+        // --- Checkout & Orders ---
+        let proceedToCheckoutBtn, shippingModal, shippingForm, shippingNameInput, shippingMobileInput, shippingAddressTextarea, orderListContainer;
+
+        // Event listeners moved to DOMContentLoaded
+
+        // --- Edit Profile Functionality ---
+        // Event listeners moved to DOMContentLoaded
+
+        // Helper function to determine progress step classes
+        function getProgressStepClass(currentStatus, stepStatus) {
+            const statusOrder = ['Pending', 'Processing', 'Shipped', 'Delivered'];
+            const currentIndex = statusOrder.indexOf(currentStatus);
+            const stepIndex = statusOrder.indexOf(stepStatus);
+            
+            if (stepIndex < currentIndex) {
+                return 'completed'; // Step is completed
+            } else if (stepIndex === currentIndex) {
+                return 'current'; // Step is current
+            } else {
+                return 'pending'; // Step is pending
+            }
+        }
+
+        // Helper function to calculate progress percentage
+        function getOrderProgressPercentage(status) {
+            const statusOrder = ['Pending', 'Processing', 'Shipped', 'Delivered'];
+            const currentIndex = statusOrder.indexOf(status);
+            if (currentIndex === -1) return 0;
+            return Math.round(((currentIndex + 1) / statusOrder.length) * 100);
+        }
+
+        // Real-time order status listener
+        function startOrderStatusListener() {
+            const user = auth.currentUser;
+            if (!user) return;
+
+            const userOrdersRef = ref(database, `orders/${user.uid}`);
+            onValue(userOrdersRef, (snapshot) => {
+                const orders = snapshot.val() || {};
+                if (Object.keys(orders).length > 0) {
+                    // Update order display in real-time
+                    renderOrders();
+                    
+                    // Show notification for status changes
+                    Object.values(orders).forEach(order => {
+                        if (order.status && order.status !== 'Pending') {
+                            showOrderStatusNotification(order);
+                        }
+                    });
+                }
+            });
+        }
+
+        // Show order status notification
+        function showOrderStatusNotification(order) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 80px;
+                right: 20px;
+                background: var(--primary-red);
+                color: white;
+                padding: 15px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                z-index: 10000;
+                max-width: 300px;
+                animation: slideInRight 0.3s ease;
+            `;
+            
+            notification.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-info-circle"></i>
+                    <div>
+                        <div style="font-weight: 600; margin-bottom: 5px;">Order Update</div>
+                        <div style="font-size: 0.9rem;">Order ${order.orderId} is now ${order.status}</div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                notification.style.animation = 'slideOutRight 0.3s ease';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 5000);
+        }
+
+        function renderOrders() {
+            if (!orderListContainer) {
+                console.log("Order list container not ready yet!"); // Debug log
+                return;
+            }
+            
+            orderListContainer.innerHTML = '';
+            const user = auth.currentUser;
+
+            if (!user) {
+                orderListContainer.innerHTML = '<p style="text-align: center; color: var(--muted-color);">Please log in to view your orders.</p>';
+                return;
+            }
+
+            const userOrdersRef = ref(database, `orders/${user.uid}`);
+            onValue(userOrdersRef, (snapshot) => {
+                const orders = snapshot.val() || {};
+                if (Object.keys(orders).length === 0) {
+                    orderListContainer.innerHTML = '<p style="text-align: center; color: var(--muted-color);">You have no past orders.</p>';
+                    return;
+                }
+
+                // Display orders in reverse chronological order
+                const sortedOrders = Object.values(orders).sort((a, b) => b.date - a.date);
+
+                orderListContainer.innerHTML = `
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
+                        ${sortedOrders.map(order => `
+                            <div class="card" style="position: relative; overflow: hidden;">
+                                <!-- Order Header -->
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color);">
+                                    <div>
+                                        <p style="margin: 0; font-size: 0.9rem; color: var(--muted-color);">Order ID</p>
+                                        <p style="margin: 0; font-weight: 600; font-family: monospace; font-size: 0.8rem;">${order.orderId}</p>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <p style="margin: 0; font-size: 0.9rem; color: var(--muted-color);">Date</p>
+                                        <p style="margin: 0; font-weight: 600;">${new Date(order.date).toLocaleDateString()}</p>
+                                    </div>
+                                </div>
+                                
+                                <!-- Order Progress Bar -->
+                                <div style="margin-bottom: 20px;">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                        <span style="font-size: 0.9rem; font-weight: 600; color: var(--text-color);">Order Progress</span>
+                                        <div style="text-align: right;">
+                                            <span style="font-size: 0.9rem; color: var(--primary-red); font-weight: 600;">${order.status}</span>
+                                            <div style="font-size: 0.8rem; color: var(--muted-color); margin-top: 2px;">
+                                                ${getOrderProgressPercentage(order.status)}% Complete
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="order-progress-bar">
+                                        <div class="order-progress-step ${getProgressStepClass(order.status, 'Pending')}" data-step="Pending">
+                                            <div class="progress-step-icon">
+                                                <i class="fas fa-clock"></i>
+                                            </div>
+                                            <span class="progress-step-label">Pending</span>
+                                        </div>
+                                        <div class="order-progress-step ${getProgressStepClass(order.status, 'Processing')}" data-step="Processing">
+                                            <div class="progress-step-icon">
+                                                <i class="fas fa-cog"></i>
+                                            </div>
+                                            <span class="progress-step-label">Processing</span>
+                                        </div>
+                                        <div class="order-progress-step ${getProgressStepClass(order.status, 'Shipped')}" data-step="Shipped">
+                                            <div class="progress-step-icon">
+                                                <i class="fas fa-shipping-fast"></i>
+                                            </div>
+                                            <span class="progress-step-label">Shipped</span>
+                                        </div>
+                                        <div class="order-progress-step ${getProgressStepClass(order.status, 'Delivered')}" data-step="Delivered">
+                                            <div class="progress-step-icon">
+                                                <i class="fas fa-check-circle"></i>
+                                            </div>
+                                            <span class="progress-step-label">Delivered</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Order Details -->
+                                <div style="margin-bottom: 15px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                        <span style="font-weight: 600; color: var(--text-color);">Total Amount</span>
+                                        <span style="font-size: 1.2rem; font-weight: 700; color: var(--primary-red);">₹${order.totalAmount.toFixed(2)}</span>
+                                    </div>
+                                    
+                                    <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+                                        <p style="margin: 0 0 10px 0; font-weight: 600; color: var(--text-color);">Order Items:</p>
+                                        <ul style="list-style: none; padding: 0; margin: 0;">
+                                            ${order.items.map(item => `
+                                                <li style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border-color);">
+                                                    <span>${item.name} (x${item.qty})</span>
+                                                    <span style="font-weight: 600;">₹${(item.price * item.qty).toFixed(2)}</span>
+                                                </li>
+                                            `).join('')}
+                                        </ul>
+                                    </div>
+                                </div>
+                                
+                                <!-- Shipping Information -->
+                                <div style="background: var(--surface-dark-color); padding: 15px; border-radius: 8px; margin-top: 15px;">
+                                    <p style="margin: 0 0 8px 0; font-weight: 600; color: var(--text-color);">
+                                        <i class="fas fa-map-marker-alt" style="color: var(--primary-red); margin-right: 8px;"></i>Shipping Information
+                                    </p>
+                                    <p style="margin: 0; color: var(--text-color);"><strong>Name:</strong> ${order.shippingName}</p>
+                                    <p style="margin: 0; color: var(--text-color);">
+                                        <strong>📱 Mobile:</strong> <span style="color: var(--primary-red); font-weight: 600;">${order.shippingMobile || 'Not provided'}</span>
+                                    </p>
+                                    <p style="margin: 0; color: var(--muted-color); font-size: 0.9rem;">
+                                        <strong>📍 Address:</strong> ${order.shippingAddress}
+                                    </p>
+                                </div>
+                                
+                                <!-- Status Badge -->
+                                <div style="position: absolute; top: 15px; right: 15px;">
+                                    <span class="status-badge status-${order.status.toLowerCase()}" style="
+                                        padding: 6px 12px; 
+                                        border-radius: 20px; 
+                                        font-size: 0.8rem; 
+                                        font-weight: 600; 
+                                        text-transform: uppercase;
+                                        letter-spacing: 0.5px;
+                                    ">${order.status}</span>
+                                </div>
+                                
+                                <!-- Cancel Order Button (only for pending orders) -->
+                                ${order.status === 'Pending' ? `
+                                    <div style="margin-top: 20px; text-align: center;">
+                                        <button class="cancel-order-btn" data-order-id="${order.orderId}" data-user-id="${order.userId}" style="
+                                            background-color: #dc3545; 
+                                            color: white; 
+                                            border: none; 
+                                            padding: 10px 20px; 
+                                            border-radius: 8px; 
+                                            font-size: 0.9rem; 
+                                            cursor: pointer; 
+                                            transition: all 0.2s ease;
+                                        ">
+                                            <i class="fas fa-times" style="margin-right: 8px;"></i>Cancel Order
+                                        </button>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            });
+        }
+
+    </script>
+</body>
+</html>
