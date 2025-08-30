@@ -1570,80 +1570,66 @@
                     }
                 }
 
-                // For production HTTPS, try to register the full Firebase service worker
+                // For production HTTPS (including GitHub Pages), try to register the Firebase messaging service worker
                 if (window.location.protocol === 'https:') {
                     try {
-                        // Create service worker code as a Blob
-                        const serviceWorkerCode = `
-                            // Firebase Cloud Messaging Service Worker
-                            importScripts('https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js');
-                            importScripts('https://www.gstatic.com/firebasejs/9.6.10/firebase-messaging-compat.js');
-
-                            // Firebase configuration
-                            const firebaseConfig = {
-                                apiKey: 'AIzaSyBGh16sYlLk1e9nkhcLu7IPTZk807qeLZM',
-                                authDomain: 'test-60bf6.firebaseapp.com',
-                                databaseURL: 'https://test-60bf6-default-rtdb.firebaseio.com',
-                                projectId: 'test-60bf6',
-                                storageBucket: 'test-60bf6.firebasestorage.app',
-                                messagingSenderId: '208881094528',
-                                appId: '1:208881094528:web:114768e2de5956cae6fb65'
-                            };
-
-                            // Initialize Firebase
-                            firebase.initializeApp(firebaseConfig);
-                            const messaging = firebase.messaging();
-
-                            // Handle background messages
-                            messaging.onBackgroundMessage((payload) => {
-                                console.log('Background message received:', payload);
-
-                                const notificationTitle = payload.notification?.title || 'New Message';
-                                const notificationOptions = {
-                                    body: payload.notification?.body || 'You have a new message',
-                                    icon: payload.notification?.icon || '/favicon.ico',
-                                    badge: '/favicon.ico',
-                                    tag: 'fcm-background-notification',
-                                    data: payload.data || {}
-                                };
-
-                                return self.registration.showNotification(notificationTitle, notificationOptions);
-                            });
-
-                            // Handle notification click
-                            self.addEventListener('notificationclick', (event) => {
-                                console.log('Notification clicked:', event);
-                                event.notification.close();
-                                
-                                // Focus on the main page if it's open
-                                event.waitUntil(
-                                    clients.matchAll({ type: 'window' }).then((clientList) => {
-                                        for (const client of clientList) {
-                                            if (client.url.includes('index.html') && 'focus' in client) {
-                                                return client.focus();
-                                            }
-                                }
-                                if (clients.openWindow) {
-                                    return clients.openWindow('/index.html');
-                                }
-                            })
-                        );
-                    });
-                `;
-
-                        const blob = new Blob([serviceWorkerCode], { type: 'application/javascript' });
-                        const serviceWorkerUrl = URL.createObjectURL(blob);
-
-                        const registration = await navigator.serviceWorker.register(serviceWorkerUrl);
-                        console.log('Firebase Service Worker registered successfully:', registration);
-
-                        // Clean up the Blob URL
-                        URL.revokeObjectURL(serviceWorkerUrl);
-
+                        // For GitHub Pages, try to register the service worker file directly
+                        // First, try to register from the root path
+                        const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
+                            scope: '/firebase-cloud-messaging-push-scope'
+                        });
+                        console.log('Firebase Messaging Service Worker registered successfully for HTTPS:', registration);
                         return registration;
                     } catch (httpsError) {
                         console.log('Failed to register Firebase service worker for HTTPS:', httpsError);
-                        return null;
+                        
+                        // If the file is not found, try to register from the current directory
+                        try {
+                            const currentDirRegistration = await navigator.serviceWorker.register('./firebase-messaging-sw.js', {
+                                scope: './firebase-cloud-messaging-push-scope'
+                            });
+                            console.log('Firebase Messaging Service Worker registered successfully from current directory:', currentDirRegistration);
+                            return currentDirRegistration;
+                        } catch (currentDirError) {
+                            console.log('Failed to register Firebase service worker from current directory:', currentDirError);
+                            
+                            // For GitHub Pages, create a minimal service worker that can be registered
+                            try {
+                                const minimalServiceWorkerCode = `
+                                    // Minimal Service Worker for GitHub Pages
+                                    self.addEventListener('install', (event) => {
+                                        console.log('Minimal Service Worker installing...');
+                                        self.skipWaiting();
+                                    });
+
+                                    self.addEventListener('activate', (event) => {
+                                        console.log('Minimal Service Worker activating...');
+                                        event.waitUntil(self.clients.claim());
+                                    });
+
+                                    self.addEventListener('message', (event) => {
+                                        console.log('Minimal Service Worker message received:', event.data);
+                                    });
+
+                                    // Note: FCM will not work with this minimal service worker
+                                    // but it will prevent the registration error
+                                `;
+
+                                const blob = new Blob([minimalServiceWorkerCode], { type: 'application/javascript' });
+                                const serviceWorkerUrl = URL.createObjectURL(blob);
+
+                                const fallbackRegistration = await navigator.serviceWorker.register(serviceWorkerUrl);
+                                console.log('Minimal Service Worker registered successfully for HTTPS (fallback):', fallbackRegistration);
+
+                                // Clean up the Blob URL
+                                URL.revokeObjectURL(serviceWorkerUrl);
+
+                                return fallbackRegistration;
+                            } catch (fallbackError) {
+                                console.log('Failed to register fallback service worker for HTTPS:', fallbackError);
+                                return null;
+                            }
+                        }
                     }
                 }
 

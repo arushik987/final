@@ -38,23 +38,25 @@ self.addEventListener('notificationclick', (event) => {
     console.log('Notification clicked:', event);
     event.notification.close();
     
-                                // Focus on the appropriate page if it's open
-                            event.waitUntil(
-                                clients.matchAll({ type: 'window' }).then((clientList) => {
-                                    for (const client of clientList) {
-                                        // Try to focus on admin panel first, then main store
-                                        if (client.url.includes('admin.html') && 'focus' in client) {
-                                            return client.focus();
-                                        } else if (client.url.includes('index.html') && 'focus' in client) {
-                                            return client.focus();
-                                        }
-                                    }
-                                    // If no clients are open, open the main store
-                                    if (clients.openWindow) {
-                                        return clients.openWindow('/index.html');
-                                    }
-                                })
-                            );
+    // Focus on the appropriate page if it's open
+    event.waitUntil(
+        clients.matchAll({ type: 'window' }).then((clientList) => {
+            for (const client of clientList) {
+                // Try to focus on admin panel first, then main store
+                if (client.url.includes('admin.html') && 'focus' in client) {
+                    return client.focus();
+                } else if (client.url.includes('index.html') && 'focus' in client) {
+                    return client.focus();
+                }
+            }
+            // If no clients are open, open the main store
+            if (clients.openWindow) {
+                // For GitHub Pages, use the correct path
+                const baseUrl = self.location.origin;
+                return clients.openWindow(`${baseUrl}/index.html`);
+            }
+        })
+    );
 });
 
 // Handle service worker installation
