@@ -1572,26 +1572,26 @@
 
                 // For production HTTPS (including GitHub Pages), try to register the Firebase messaging service worker
                 if (window.location.protocol === 'https:') {
+                    // For GitHub Pages, start with current directory to avoid 404 errors
                     try {
-                        // For GitHub Pages, try to register the service worker file directly
-                        // First, try to register from the root path
-                        const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
-                            scope: '/firebase-cloud-messaging-push-scope'
+                        // First, try to register from the current directory (most likely to work on GitHub Pages)
+                        const currentDirRegistration = await navigator.serviceWorker.register('./firebase-messaging-sw.js', {
+                            scope: './firebase-cloud-messaging-push-scope'
                         });
-                        console.log('Firebase Messaging Service Worker registered successfully for HTTPS:', registration);
-                        return registration;
-                    } catch (httpsError) {
-                        console.log('Failed to register Firebase service worker for HTTPS:', httpsError);
+                        console.log('Firebase Messaging Service Worker registered successfully from current directory:', currentDirRegistration);
+                        return currentDirRegistration;
+                    } catch (currentDirError) {
+                        console.log('Failed to register Firebase service worker from current directory:', currentDirError);
                         
-                        // If the file is not found, try to register from the current directory
+                        // If current directory fails, try root path
                         try {
-                            const currentDirRegistration = await navigator.serviceWorker.register('./firebase-messaging-sw.js', {
-                                scope: './firebase-cloud-messaging-push-scope'
+                            const rootRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
+                                scope: '/firebase-cloud-messaging-push-scope'
                             });
-                            console.log('Firebase Messaging Service Worker registered successfully from current directory:', currentDirRegistration);
-                            return currentDirRegistration;
-                        } catch (currentDirError) {
-                            console.log('Failed to register Firebase service worker from current directory:', currentDirError);
+                            console.log('Firebase Messaging Service Worker registered successfully from root path:', rootRegistration);
+                            return rootRegistration;
+                        } catch (rootError) {
+                            console.log('Failed to register Firebase service worker from root path:', rootError);
                             
                             // For GitHub Pages, create a minimal service worker that can be registered
                             try {
