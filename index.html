@@ -1436,16 +1436,37 @@
                         return;
                     }
                     
-                    // Get FCM token
-                    const token = await getToken(messaging, { vapidKey: VAPID_KEY });
-                    if (token) {
-                        console.log('FCM Token:', token);
+                    // Register service worker BEFORE getting FCM token to avoid 404 errors
+                    try {
+                        // First, ensure our service worker is registered
+                        const serviceWorkerRegistration = await registerServiceWorker();
+                        if (!serviceWorkerRegistration) {
+                            console.log('Service worker registration failed, FCM will be limited');
+                            return;
+                        }
                         
-                        // Save token to user's profile if logged in
-                        const user = auth.currentUser;
-                        if (user) {
-                            const userTokenRef = ref(database, `users/${user.uid}/fcmToken`);
-                            await set(userTokenRef, token);
+                        // Now get FCM token with the registered service worker
+                        const token = await getToken(messaging, { 
+                            vapidKey: VAPID_KEY,
+                            serviceWorkerRegistration: serviceWorkerRegistration
+                        });
+                        
+                        if (token) {
+                            console.log('FCM Token:', token);
+                            
+                            // Save token to user's profile if logged in
+                            const user = auth.currentUser;
+                            if (user) {
+                                const userTokenRef = ref(database, `users/${user.uid}/fcmToken`);
+                                await set(userTokenRef, token);
+                            }
+                        }
+                    } catch (fcmError) {
+                        console.log('FCM token generation failed:', fcmError.message);
+                        
+                        // Check if it's a service worker registration issue
+                        if (fcmError.message.includes('service worker') || fcmError.message.includes('404')) {
+                            console.log('Service worker registration issue detected, FCM will be limited');
                         }
                     }
                 } else if (permission === 'denied') {
@@ -1489,21 +1510,22 @@
         });
 
         // Initialize FCM when page loads
-        document.addEventListener('DOMContentLoaded', () => {
-            // Initialize FCM first
-            initializeFCM().catch(error => {
-                console.log('FCM initialization failed, continuing without notifications:', error.message);
-            });
-            
-            // Try to register service worker (may fail in some environments)
-            registerServiceWorker().then(registration => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Register service worker FIRST to avoid 404 errors
+            try {
+                const registration = await registerServiceWorker();
                 if (registration) {
                     console.log('Service Worker registered successfully');
                 } else {
                     console.log('Service Worker registration skipped (not supported in current environment)');
                 }
-            }).catch(error => {
+            } catch (error) {
                 console.log('Service Worker registration failed:', error.message);
+            }
+            
+            // Initialize FCM AFTER service worker registration
+            initializeFCM().catch(error => {
+                console.log('FCM initialization failed, continuing without notifications:', error.message);
             });
         });
 
